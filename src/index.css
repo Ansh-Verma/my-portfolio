@@ -1,0 +1,258 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================
+   THEME COLOR VARIABLES
+   ========================= */
+
+/* LIGHT mode (default) */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-card: rgba(255, 255, 255, 0.95);
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+
+  --border-color: rgba(15, 23, 42, 0.08);
+
+  --accent-cyan: #06b6d4;
+  --accent-purple: #8b5cf6;
+
+  --scrollbar-track: rgba(0, 0, 0, 0.04);
+  --scrollbar-thumb-gradient-start: #06b6d4;
+  --scrollbar-thumb-gradient-end: #8b5cf6;
+}
+
+/* DARK mode (applies when html has class "dark") */
+html.dark {
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --bg-card: rgba(15, 23, 42, 0.6);
+
+  --text-primary: #e5e7eb;
+  --text-secondary: #9ca3af;
+
+  --border-color: rgba(255, 255, 255, 0.08);
+
+  --accent-cyan: #22d3ee;
+  --accent-purple: #a78bfa;
+
+  --scrollbar-track: rgba(255, 255, 255, 0.04);
+  --scrollbar-thumb-gradient-start: #22d3ee;
+  --scrollbar-thumb-gradient-end: #a78bfa;
+}
+
+/* =========================
+   GLOBAL LAYOUT + ACCESSIBILITY
+   ========================= */
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Use theme variables for background and text */
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  /* Do NOT hide cursor globally. Use .custom-cursor-active to hide it when custom cursor is enabled. */
+  cursor: auto;
+}
+
+/* When the custom cursor component is active, this class will hide the system cursor */
+.custom-cursor-active,
+.custom-cursor-active * {
+  cursor: none !important;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* =========================
+   GLASSMORPHISM / SURFACES
+   ========================= */
+
+.glass {
+  /* theme-aware card background */
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+/* subtle hover for interactive glass surfaces */
+.glass-hover:hover {
+  /* Slightly stronger effect on dark mode, subtle on light */
+  background: color-mix(in srgb, var(--bg-card) 85%, rgba(255,255,255,0.03) 15%);
+  border-color: color-mix(in srgb, var(--border-color) 70%, var(--accent-cyan) 30%);
+}
+
+/* If you need a white-based card in light mode, you can use .card-light */
+.card-light {
+  background: #ffffff;
+  color: var(--text-primary);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+/* =========================
+   NEUMORPHISM
+   (adapt shadows per theme)
+   ========================= */
+.neumorphism {
+  background: var(--bg-card);
+  border-radius: 12px;
+}
+
+/* dark-mode neu */
+html.dark .neumorphism {
+  box-shadow: 8px 8px 16px rgba(0,0,0,0.45), -8px -8px 16px rgba(255,255,255,0.02);
+}
+
+/* light-mode neu */
+html:not(.dark) .neumorphism {
+  box-shadow: 8px 8px 16px rgba(0,0,0,0.06), -8px -8px 16px rgba(255,255,255,0.9);
+}
+
+/* inset variant */
+.neumorphism-inset {
+  background: var(--bg-card);
+}
+
+html.dark .neumorphism-inset {
+  box-shadow: inset 5px 5px 10px rgba(0,0,0,0.45), inset -5px -5px 10px rgba(255,255,255,0.02);
+}
+
+html:not(.dark) .neumorphism-inset {
+  box-shadow: inset 5px 5px 10px rgba(0,0,0,0.06), inset -5px -5px 10px rgba(255,255,255,0.95);
+}
+
+/* =========================
+   SCROLLBAR (WebKit)
+   use theme-aware variables
+   ========================= */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--scrollbar-thumb-gradient-start), var(--scrollbar-thumb-gradient-end));
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(0.95);
+}
+
+/* =========================
+   PARTICLES / GLOW (reduce in light mode)
+   ========================= */
+
+/* use .glow or .particle on elements that create neon effects */
+.glow, .particle, .neon {
+  transition: opacity 200ms ease, filter 200ms ease;
+}
+
+/* reduce glow intensity when NOT in dark mode */
+html:not(.dark) .glow,
+html:not(.dark) .particle,
+html:not(.dark) .neon {
+  opacity: 0.18;
+  filter: none;
+  mix-blend-mode: normal;
+}
+
+/* strong glow for dark mode */
+html.dark .glow,
+html.dark .particle,
+html.dark .neon {
+  opacity: 1;
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 8px 32px rgba(139,92,246,0.18)) blur(0.6px);
+}
+
+/* =========================
+   TYPOGRAPHY HELPERS
+   ========================= */
+
+.text-primary {
+  color: var(--text-primary) !important;
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+/* Gradient headings should use the theme accents */
+.gradient-heading {
+  background-image: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Fallback for elements that previously used tailwind text-white/gray classes */
+.fallback-muted {
+  color: var(--text-secondary);
+}
+
+/* =========================
+   UTILITY / SMALL FIXES
+   ========================= */
+
+/* ensure interactive elements are readable */
+button, a, input, textarea {
+  color: inherit;
+}
+
+/* disable pointer-events none accidentally applied higher up */
+.pointer-events-restore {
+  pointer-events: auto !important;
+}
+
+/* small accessibility helper for focus outlines */
+:focus {
+  outline: 3px solid color-mix(in srgb, var(--accent-cyan) 40%, transparent 60%);
+  outline-offset: 3px;
+}
+
+
+
+/* =========================
+   DEVELOPER NOTES
+   ========================= */
+
+/*
+ - Use the .custom-cursor-active class (added by your CustomCursor component) to hide the system cursor.
+ - Theme switching should add class "dark" to <html> for dark mode. The default (no .dark) is light mode.
+ - Place heavy particles/gradient blobs inside elements with `hidden dark:block` so they appear only in dark mode.
+ - Use .glass on card wrappers to get consistent surfaces across themes.
+ - Use .gradient-heading for hero titles and replace fixed 'from-* to-*' tailwind classes with this class so headings adapt.
+*/
