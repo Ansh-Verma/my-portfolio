@@ -177,23 +177,33 @@ export default function Portfolio() {
     return;
   }
 
+  const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+  const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+  const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+  if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+    console.error('Missing EmailJS environment variables');
+    alert('Service not configured properly. Please try again later.');
+    return;
+  }
+
   try {
     await emailjs.send(
-      'service_jd3n3ge',        // 🔹 your Service ID
-      'template_fs3w3cw',       // 🔹 your Template ID
+      SERVICE_ID,
+      TEMPLATE_ID,
       {
         name: formData.name,
         email: formData.email,
         message: formData.message,
         time: new Date().toLocaleString(),
       },
-      '9JA-M9KUOn9d6aTRN'        // 🔹 your Public Key
+      PUBLIC_KEY
     );
 
     alert('Message sent successfully!');
     setFormData({ name: '', email: '', message: '' });
   } catch (error) {
-    console.error(error);
+    console.error('EmailJS error:', error);
     alert('Failed to send message. Try again later.');
   }
 };
