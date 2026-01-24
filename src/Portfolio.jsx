@@ -537,10 +537,10 @@ export default function Portfolio() {
               className="space-y-6"
             >
               <p className="text-lg text-secondary leading-relaxed">
-                I'm an AI Engineer passionate about building intelligent systems that make a real impact. Currently pursuing B.Tech in Computer Science & Engineering at GLA University, I've worked with prestigious organizations like CSIR, DRDO, and gained hands-on experience in machine learning, predictive modeling, and full-stack development.
+                I'm an AI Engineer passionate about building intelligent AI systems that make a real impact, I've worked with prestigious organizations like CSIR, DRDO, and gained hands-on experience in machine learning, AI models, and full-stack development.
               </p>
               <p className="text-lg text-secondary leading-relaxed">
-                My expertise spans from developing GPS simulators to creating AI-powered proctoring systems. I'm certified by Oracle and Microsoft in AI and cloud technologies, and I'm driven by the challenge of solving complex problems with innovative solutions.
+                My expertise spans from developing AI agents to creating AI-powered proctoring systems. I'm certified by Oracle and Microsoft in AI and cloud technologies, and I'm driven by the challenge of solving complex problems with innovative solutions.
               </p>
 
               <div className="flex">
