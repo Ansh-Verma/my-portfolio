@@ -166,9 +166,9 @@ export default function Portfolio() {
 
   const stats = [
     { label: "Years Experience", value: yearsOfExp, icon: Calendar, color: "text-cyan-400" },
-    { label: "GitHub Repos", value: "15+", icon: GitBranch, color: "text-purple-400" },
+    { label: "GitHub Repos", value: "3", icon: GitBranch, color: "text-purple-400" },
     { label: "Certifications", value: "4", icon: Award, color: "text-pink-400" },
-    { label: "Projects Completed", value: "10+", icon: TrendingUp, color: "text-green-400" }
+    { label: "Projects Completed", value: "4+", icon: TrendingUp, color: "text-green-400" }
   ];
 
   const handleSubmit = async () => {
