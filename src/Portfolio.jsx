@@ -115,6 +115,7 @@ export default function Portfolio() {
       period: "June 2024 – April 2025",
       tags: ["HTML5", "CSS3", "Python", "scikit-learn", "MongoDB", "React", "Express", "Node.js"],
       github: "https://github.com/Ansh-Verma/AI-Proctor",
+      live: "https://ai-proctor-ruddy.vercel.app",
       category: "ML",
       rating: 5
     }
@@ -147,8 +148,6 @@ export default function Portfolio() {
     }
   ];
 
-  // removed testimonials array (not needed)
-
   const skills = {
     languages: ["Java", "Python", "C#", "HTML5", "CSS3", "SQL", "JavaScript"],
     frameworks: [".NET", "ReactJS", "ExpressJS", "NodeJS", "scikit-learn"],
@@ -172,42 +171,41 @@ export default function Portfolio() {
   ];
 
   const handleSubmit = async () => {
-  if (!formData.name || !formData.email || !formData.message) {
-    alert('Please fill in all fields');
-    return;
-  }
+    if (!formData.name || !formData.email || !formData.message) {
+      alert('Please fill in all fields');
+      return;
+    }
 
-  const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-  const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-  const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+    const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-  if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
-    console.error('Missing EmailJS environment variables');
-    alert('Service not configured properly. Please try again later.');
-    return;
-  }
+    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+      console.error('Missing EmailJS environment variables');
+      alert('Service not configured properly. Please try again later.');
+      return;
+    }
 
-  try {
-    await emailjs.send(
-      SERVICE_ID,
-      TEMPLATE_ID,
-      {
-        name: formData.name,
-        email: formData.email,
-        message: formData.message,
-        time: new Date().toLocaleString(),
-      },
-      PUBLIC_KEY
-    );
+    try {
+      await emailjs.send(
+        SERVICE_ID,
+        TEMPLATE_ID,
+        {
+          name: formData.name,
+          email: formData.email,
+          message: formData.message,
+          time: new Date().toLocaleString(),
+        },
+        PUBLIC_KEY
+      );
 
-    alert('Message sent successfully!');
-    setFormData({ name: '', email: '', message: '' });
-  } catch (error) {
-    console.error('EmailJS error:', error);
-    alert('Failed to send message. Try again later.');
-  }
-};
-
+      alert('Message sent successfully!');
+      setFormData({ name: '', email: '', message: '' });
+    } catch (error) {
+      console.error('EmailJS error:', error);
+      alert('Failed to send message. Try again later.');
+    }
+  };
 
   // Single PDF download (assumes /public/Ansh_Verma_Resume.pdf)
   const downloadResume = () => {
@@ -742,8 +740,9 @@ export default function Portfolio() {
                         <Sparkles size={40} />
                       </motion.div>
 
+                      {/* top-right icon now opens live first (if available) */}
                       <a
-                        href={project.github}
+                        href={project.live || project.github}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-3 glass glass-hover rounded-full"
@@ -778,6 +777,39 @@ export default function Portfolio() {
                           {tech}
                         </motion.span>
                       ))}
+                    </div>
+
+                    {/* NEW: Live Demo + GitHub buttons (visible, accessible, primary = Live) */}
+                    <div className="flex gap-4 mt-6">
+                      {project.live && (
+                        <motion.a
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          href={project.live}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-5 py-2 bg-[linear-gradient(90deg,var(--accent-cyan),var(--accent-purple))] rounded-full text-white text-sm font-semibold"
+                          aria-label={`${project.title} - Live Demo`}
+                        >
+                          <ExternalLink size={16} />
+                          Live Demo
+                        </motion.a>
+                      )}
+
+                      {project.github && (
+                        <motion.a
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          href={project.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-5 py-2 glass glass-hover rounded-full text-sm border"
+                          aria-label={`${project.title} - GitHub`}
+                        >
+                          <Github size={16} />
+                          GitHub
+                        </motion.a>
+                      )}
                     </div>
                   </div>
                 </motion.div>

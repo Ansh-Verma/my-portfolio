@@ -75,6 +75,7 @@ const RESUME_DATA = {
     {
       title: "AI-Based Proctored Examination Portal",
       repo: "https://github.com/Ansh-Verma/AI-Proctor",
+      live: "https://ai-proctor-ruddy.vercel.app",
       period: "June 2024 – April 2025",
       bullets: [
         "Engineered an AI-powered exam portal that ensured secure and fair online assessments.",
