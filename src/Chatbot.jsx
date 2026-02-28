@@ -2,111 +2,159 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Minimize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-/*
-  Chatbot.jsx
-  - Ready to paste (replace your existing Chatbot component file)
-  - Uses RESUME_DATA populated from the uploaded resume (see file cite above).
-  - Rule-based responses (no external API).
-*/
+/**
+ * Recommended free option (better than OpenAI for cost): Groq
+ * - Model used below: llama-3.3-70b-versatile
+ * - Add in .env: VITE_GROQ_API_KEY=your_groq_api_key
+ * - Get key from: https://console.groq.com/keys (has free tier)
+ */
 
 const RESUME_DATA = {
-  name: "Ansh Verma",
+  name: 'Ansh Verma',
   contact: {
-    email: "anshverma1.work@gmail.com",
-    phone: "+91 6398775442",
-    linkedin: "https://linkedin.com/in/anshverma",
-    github: "https://github.com/Ansh-Verma",
-    location: "Agra, Uttar Pradesh"
+    email: 'anshverma1.work@gmail.com',
+    phone: '+91 6398775442',
+    linkedin: 'https://linkedin.com/in/anshverma',
+    github: 'https://github.com/Ansh-Verma',
+    location: 'Agra, Uttar Pradesh'
   },
   education: [
     {
-      institute: "GLA University",
-      degree: "Bachelor of Technology in Computer Science & Engineering",
-      period: "2021 – 2025",
-      note: "CPI: 6.91/10.0"
+      institute: 'GLA University',
+      degree: 'Bachelor of Technology in Computer Science & Engineering',
+      period: '2021 – 2025',
+      note: 'CPI: 6.91/10.0'
     },
     {
       institute: "St. Clare's High School",
-      degree: "Intermediate",
-      period: "2020 – 2021",
-      note: "Percentage: 79.3%"
+      degree: 'Intermediate',
+      period: '2020 – 2021',
+      note: 'Percentage: 79.3%'
     },
     {
       institute: "St. Clare's High School",
-      degree: "High School",
-      period: "2018 – 2019",
-      note: "Percentage: 82.5%"
+      degree: 'High School',
+      period: '2018 – 2019',
+      note: 'Percentage: 82.5%'
     }
   ],
   experience: [
     {
-      role: "Research Intern",
-      org: "CSIR, CRRI",
-      location: "New Delhi",
-      period: "June 2025 – August 2025",
+      role: 'Research Intern',
+      org: 'CSIR, CRRI',
+      location: 'New Delhi',
+      period: 'June 2025 – August 2025',
       bullets: [
-        "Designed and implemented end-to-end predictive modeling pipelines in Python to forecast congestion indices on urban expressways.",
-        "Achieved test R² of 0.9604 (approx. RMSE 0.0711).",
-        "Performed data collection, cleaning, and feature engineering to estimate optimum speed limits."
+        'Designed and implemented end-to-end predictive modeling pipelines in Python to forecast congestion indices on urban expressways.',
+        'Achieved test R² of 0.9604 (approx. RMSE 0.0711).',
+        'Performed data collection, cleaning, and feature engineering to estimate optimum speed limits.'
       ]
     },
     {
-      role: "Software Developer Intern",
-      org: "DRDO, ADRDE",
-      location: "Agra, Uttar Pradesh",
-      period: "May 2023 – July 2023",
+      role: 'Software Developer Intern',
+      org: 'DRDO, ADRDE',
+      location: 'Agra, Uttar Pradesh',
+      period: 'May 2023 – July 2023',
       bullets: [
-        "Built a GPS Simulator using C# and .NET framework.",
-        "Developed with Visual Studio Professional and Windows Forms to create a user-friendly application interface."
+        'Built a GPS Simulator using C# and .NET framework.',
+        'Developed with Visual Studio Professional and Windows Forms to create a user-friendly application interface.'
       ]
     },
     {
-      role: "Machine Learning Trainee",
-      org: "JOVAC, GLA University",
-      location: "Mathura, Uttar Pradesh",
-      period: "June 2022 – July 2022",
+      role: 'Machine Learning Trainee',
+      org: 'JOVAC, GLA University',
+      location: 'Mathura, Uttar Pradesh',
+      period: 'June 2022 – July 2022',
       bullets: [
-        "Gained proficiency in fundamental concepts in machine learning using Python and relevant libraries.",
-        "Processed and analyzed datasets to predict outcomes, improving data-driven decision-making."
+        'Gained proficiency in fundamental concepts in machine learning using Python and relevant libraries.',
+        'Processed and analyzed datasets to predict outcomes, improving data-driven decision-making.'
       ]
     }
   ],
   projects: [
     {
-      title: "AI-Based Proctored Examination Portal",
-      repo: "https://github.com/Ansh-Verma/AI-Proctor",
-      live: "https://ai-proctor-ruddy.vercel.app",
-      period: "June 2024 – April 2025",
+      title: 'AI-Based Proctored Examination Portal',
+      repo: 'https://github.com/Ansh-Verma/AI-Proctor',
+      live: 'https://ai-proctor-ruddy.vercel.app',
+      period: 'June 2024 – April 2025',
       bullets: [
-        "Engineered an AI-powered exam portal that ensured secure and fair online assessments.",
-        "Integrated facial recognition and activity monitoring for real-time proctoring.",
-        "Added face authentication, automatic grading, and plagiarism detection for fair assessments."
+        'Engineered an AI-powered exam portal that ensured secure and fair online assessments.',
+        'Integrated facial recognition and activity monitoring for real-time proctoring.',
+        'Added face authentication, automatic grading, and plagiarism detection for fair assessments.'
       ],
-      techStack: ["HTML5", "CSS3", "Python", "scikit-learn", "MERN"]
+      techStack: ['HTML5', 'CSS3', 'Python', 'scikit-learn', 'MERN']
     }
   ],
   skills: {
-    languages: ["Java", "HTML", "CSS", "SQL", "Markdown"],
-    developerTools: ["VS Code", "Git", "GitHub", "MongoDB", "Docker", "n8n"],
-    technologies: [".NET", "ReactJS", "ExpressJS", "NodeJS"],
-    professional: ["Problem-solving", "Decision-making", "Leadership & Team management", "Adaptability"]
+    languages: ['Java', 'HTML', 'CSS', 'SQL', 'Markdown'],
+    developerTools: ['VS Code', 'Git', 'GitHub', 'MongoDB', 'Docker', 'n8n'],
+    technologies: ['.NET', 'ReactJS', 'ExpressJS', 'NodeJS'],
+    professional: ['Problem-solving', 'Decision-making', 'Leadership & Team management', 'Adaptability']
   },
   achievements: [
-    "Oracle Cloud Infrastructure 2025 Certified Generative AI Professional",
-    "Oracle Cloud Infrastructure 2025 Certified AI Foundations Associate",
-    "Microsoft Certified: Intelligent Document Processing Solution with Azure AI Document Intelligence",
-    "Microsoft Certified: Natural Language Processing Solution with Azure AI Language"
+    'Oracle Cloud Infrastructure 2025 Certified Generative AI Professional',
+    'Oracle Cloud Infrastructure 2025 Certified AI Foundations Associate',
+    'Microsoft Certified: Intelligent Document Processing Solution with Azure AI Document Intelligence',
+    'Microsoft Certified: Natural Language Processing Solution with Azure AI Language'
   ],
   cocurricular: {
-    role: "Vice President",
-    org: "Aikyam GLAU Club – GLA University, Mathura",
+    role: 'Vice President',
+    org: 'Aikyam GLAU Club – GLA University, Mathura',
     bullets: [
-      "Led a team of 50 in organizing cultural events and workshops, enhancing campus engagement.",
-      "Chaired weekly strategy meetings and optimized team workflow, ensuring efficient event execution."
+      'Led a team of 50 in organizing cultural events and workshops, enhancing campus engagement.',
+      'Chaired weekly strategy meetings and optimized team workflow, ensuring efficient event execution.'
     ]
   },
-  summary: "AI Engineer experienced in predictive modeling, building AI-powered systems, and full-stack development."
+  summary: 'AI Engineer experienced in predictive modeling, building AI-powered systems, and full-stack development.'
 };
+
+const RESUME_CONTEXT = JSON.stringify(RESUME_DATA, null, 2);
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
+
+const getFallbackReply = (question) => {
+  const q = question.toLowerCase();
+  if (q.includes('contact') || q.includes('email') || q.includes('phone')) {
+    return `You can reach Ansh at ${RESUME_DATA.contact.email} or ${RESUME_DATA.contact.phone}.\nLinkedIn: ${RESUME_DATA.contact.linkedin}`;
+  }
+  if (q.includes('project')) {
+    return `${RESUME_DATA.projects[0].title}\nRepo: ${RESUME_DATA.projects[0].repo}\nLive: ${RESUME_DATA.projects[0].live}`;
+  }
+  return "I can answer intelligently once you add VITE_GROQ_API_KEY in your .env file. Right now I'm using limited fallback mode.";
+};
+
+async function askGroq(userMessage, chatHistory) {
+  if (!GROQ_API_KEY) return getFallbackReply(userMessage);
+
+  const systemPrompt = `You are Ansh Verma's portfolio assistant.\nRules:\n- Answer naturally, concise, helpful, and professional.\n- Use ONLY the provided resume context.\n- If data is missing, say you don't have that info.\n- Never invent facts.\n\nResume context:\n${RESUME_CONTEXT}`;
+
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...chatHistory.slice(-8).map((m) => ({ role: m.role, content: m.content })),
+    { role: 'user', content: userMessage }
+  ];
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${GROQ_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.3,
+      max_tokens: 500,
+      messages
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || 'Groq API request failed');
+  }
+
+  const data = await response.json();
+  return data?.choices?.[0]?.message?.content?.trim() || 'I could not generate a response right now.';
+}
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -114,7 +162,8 @@ export default function Chatbot() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: `Hi! I'm Ansh's AI assistant. Ask me about his education, experience, projects, skills, certifications, or contact info. Try: "Tell me about your experience" or "Show project link".`
+      content:
+        "Hi! I'm Ansh's AI assistant powered by an LLM. Ask me anything about his education, experience, projects, skills, certifications, or contact details."
     }
   ]);
   const [input, setInput] = useState('');
@@ -125,132 +174,32 @@ export default function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // Normalize helper
-  const normalize = (s = '') => s.toLowerCase().replace(/[^\w\s]/g, '').trim();
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
 
-  // Build readable blocks from RISUME_DATA
-  const formatEducation = () => {
-    return RESUME_DATA.education.map(e => `${e.degree} — ${e.institute} (${e.period}) — ${e.note}`).join('\n');
-  };
-
-  const formatExperience = () => {
-    return RESUME_DATA.experience.map(exp => {
-      return `${exp.role} at ${exp.org} — ${exp.period}\n${exp.bullets.map(b => `• ${b}`).join('\n')}`;
-    }).join('\n\n');
-  };
-
-  const formatProjects = () => {
-    return RESUME_DATA.projects.map(p => `${p.title} (${p.period})\nRepo: ${p.repo}\n${p.bullets.map(b => `• ${b}`).join('\n')}\nTech: ${p.techStack.join(', ')}`).join('\n\n');
-  };
-
-  const generateResponse = (userMessage) => {
-    const msg = normalize(userMessage);
-
-    if (!msg) return "Please type a question about Ansh's education, experience, projects, skills, certifications, or contact.";
-
-    // Greetings
-    if (/\b(hi|hello|hey|good morning|good afternoon|good evening)\b/.test(msg)) {
-      return `Hello — I'm Ansh's assistant. ${RESUME_DATA.summary} You can ask about experience, projects, education, skills, certifications, or how to contact him.`;
-    }
-
-    // Thanks
-    if (/\b(thank|thanks|thx)\b/.test(msg)) {
-      return "You're welcome! Anything else you'd like to know about Ansh's work or projects?";
-    }
-
-    // Who / name
-    if (/\bwho (are )?you\b/.test(msg) || /\bwho is this\b/.test(msg) || (msg.includes('your') && msg.includes('name'))) {
-      return `I'm ${RESUME_DATA.name}'s assistant. ${RESUME_DATA.name} is an ${RESUME_DATA.summary} See education and experience sections for details.`;
-    }
-
-    // Tell me about yourself / summary
-    if (/\b(tell me about|about yourself|about you)\b/.test(msg)) {
-      return `${RESUME_DATA.summary} Education: ${RESUME_DATA.education[0].degree} at ${RESUME_DATA.education[0].institute} (${RESUME_DATA.education[0].period}).`;
-    }
-
-    // Age -> do NOT invent
-    if (/\b(age|how old|years old)\b/.test(msg)) {
-      return "I don't provide personal age information. I can share professional background, education, and projects.";
-    }
-
-    // Location
-    if (/\b(where (are )?you from|where from|location|based in|live)\b/.test(msg)) {
-      return `Location: ${RESUME_DATA.contact.location}.`;
-    }
-
-    // Contact details
-    if (/\b(contact|email|phone|reach|how to contact|get in touch)\b/.test(msg)) {
-      const c = RESUME_DATA.contact;
-      return `Contact:\n📧 ${c.email}\n📞 ${c.phone}\nLinkedIn: ${c.linkedin}\nGitHub: ${c.github}`;
-    }
-
-    // Education
-    if (/\b(education|study|university|college|degree|cpi|gla)\b/.test(msg)) {
-      return `Education:\n${formatEducation()}`;
-    }
-
-    // Experience / work
-    if (/\b(experience|work|intern|internship|worked)\b/.test(msg)) {
-      return `Work Experience:\n${formatExperience()}`;
-    }
-
-    // Projects
-    if (/\b(project|projects|portfolio|proctor|proctored)\b/.test(msg)) {
-      return `Projects:\n${formatProjects()}`;
-    }
-
-    // GitHub / repo
-    if (/\b(github|repo|repository|code)\b/.test(msg)) {
-      return `GitHub: ${RESUME_DATA.contact.github} — featured repo: ${RESUME_DATA.projects[0].repo}`;
-    }
-
-    // Skills
-    if (/\b(skill|skills|technolog|languages|framework|tools)\b/.test(msg)) {
-      const s = RESUME_DATA.skills;
-      return `Skills:\nLanguages: ${s.languages.join(', ')}\nTools: ${s.developerTools.join(', ')}\nTechnologies: ${s.technologies.join(', ')}\nProfessional: ${s.professional.join(', ')}`;
-    }
-
-    // Certifications / achievements
-    if (/\b(certif|certificate|certified|achievement|achievements)\b/.test(msg)) {
-      return `Certifications & Achievements:\n${RESUME_DATA.achievements.map(a => `• ${a}`).join('\n')}`;
-    }
-
-    // Co-curricular / leadership
-    if (/\b(vice|president|club|co-curricular|lead|leadership)\b/.test(msg)) {
-      return `Co-curricular:\n${RESUME_DATA.cocurricular.role} at ${RESUME_DATA.cocurricular.org}\n${RESUME_DATA.cocurricular.bullets.map(b => `• ${b}`).join('\n')}`;
-    }
-
-    // Numeric/time queries about years
-    if (/\b(years|how many years|duration)\b/.test(msg)) {
-      return "Ansh has internship and project experience spanning from 2022 onward (see Experience for dates).";
-    }
-
-    // Short "what do you do"
-    if (/\b(what do you do|what is your role|occupation|profession)\b/.test(msg)) {
-      return `${RESUME_DATA.name} is an AI Engineer. ${RESUME_DATA.summary} He builds AI/ML systems and full-stack applications.`;
-    }
-
-    // Goodbye
-    if (/\b(bye|goodbye|see ya|see you)\b/.test(msg)) {
-      return "Goodbye — feel free to message again or use the contact details to reach out directly.";
-    }
-
-    // Fallback helpful prompt
-    return "I can provide: education, work experience, projects, skills, certifications, or contact info. Examples: \"Tell me about your proctoring project\", \"Where did you study?\", \"Show GitHub\".";
-  };
-
-  const handleSend = () => {
-    if (!input.trim()) return;
     const userMessage = { role: 'user', content: input.trim() };
-    setMessages(prev => [...prev, userMessage]);
+    const nextHistory = [...messages, userMessage];
+
+    setMessages(nextHistory);
     setInput('');
     setIsLoading(true);
 
-    setTimeout(() => {
-      const response = generateResponse(userMessage.content);
-      setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+    try {
+      const reply = await askGroq(userMessage.content, nextHistory);
+      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+    } catch (error) {
+      console.error('Chat API error:', error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content:
+            'Sorry, I could not reach the AI service right now. Please try again in a moment. If this keeps happening, verify your VITE_GROQ_API_KEY.'
+        }
+      ]);
+    } finally {
       setIsLoading(false);
-    }, 400);
+    }
   };
 
   return (
@@ -290,14 +239,14 @@ export default function Chatbot() {
                 </div>
                 <div>
                   <h3 className="font-bold text-white">AI Assistant</h3>
-                  <p className="text-xs text-white/80">Ask me about Ansh's background</p>
+                  <p className="text-xs text-white/80">Powered by Groq (free tier)</p>
                 </div>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsMinimized(!isMinimized)}
                   className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label={isMinimized ? "Restore chat" : "Minimize chat"}
+                  aria-label={isMinimized ? 'Restore chat' : 'Minimize chat'}
                 >
                   <Minimize2 size={16} />
                 </button>
@@ -338,8 +287,14 @@ export default function Chatbot() {
                       <div className="bg-white/10 p-3 rounded-2xl">
                         <div className="flex gap-2">
                           <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" />
-                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                          <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+                          <div
+                            className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                            style={{ animationDelay: '0.2s' }}
+                          />
+                          <div
+                            className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"
+                            style={{ animationDelay: '0.4s' }}
+                          />
                         </div>
                       </div>
                     </div>
@@ -355,13 +310,13 @@ export default function Chatbot() {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                      placeholder="Ask about education, experience, projects, skills..."
+                      placeholder="Ask anything about Ansh..."
                       className="flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-cyan-500 transition-colors"
                       aria-label="Type your message"
                     />
                     <button
                       onClick={handleSend}
-                      disabled={!input.trim()}
+                      disabled={!input.trim() || isLoading}
                       className="p-3 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label="Send message"
                     >
