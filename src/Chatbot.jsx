@@ -1,171 +1,18 @@
+// src/Chatbot.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Minimize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-/**
- * Recommended free option (better than OpenAI for cost): Groq
- * - Model used below: llama-3.3-70b-versatile
- * - Add in .env: VITE_GROQ_API_KEY=your_groq_api_key
- * - Get key from: https://console.groq.com/keys (has free tier)
- */
-
-const RESUME_DATA = {
-  name: 'Ansh Verma',
-  contact: {
-    email: 'anshverma1.work@gmail.com',
-    phone: '+91 6398775442',
-    linkedin: 'https://linkedin.com/in/anshverma',
-    github: 'https://github.com/Ansh-Verma',
-    location: 'Agra, Uttar Pradesh'
-  },
-  education: [
-    {
-      institute: 'GLA University',
-      degree: 'Bachelor of Technology in Computer Science & Engineering',
-      period: '2021 – 2025',
-      note: 'CPI: 6.91/10.0'
-    },
-    {
-      institute: "St. Clare's High School",
-      degree: 'Intermediate',
-      period: '2020 – 2021',
-      note: 'Percentage: 79.3%'
-    },
-    {
-      institute: "St. Clare's High School",
-      degree: 'High School',
-      period: '2018 – 2019',
-      note: 'Percentage: 82.5%'
-    }
-  ],
-  experience: [
-    {
-      role: 'Research Intern',
-      org: 'CSIR, CRRI',
-      location: 'New Delhi',
-      period: 'June 2025 – August 2025',
-      bullets: [
-        'Designed and implemented end-to-end predictive modeling pipelines in Python to forecast congestion indices on urban expressways.',
-        'Achieved test R² of 0.9604 (approx. RMSE 0.0711).',
-        'Performed data collection, cleaning, and feature engineering to estimate optimum speed limits.'
-      ]
-    },
-    {
-      role: 'Software Developer Intern',
-      org: 'DRDO, ADRDE',
-      location: 'Agra, Uttar Pradesh',
-      period: 'May 2023 – July 2023',
-      bullets: [
-        'Built a GPS Simulator using C# and .NET framework.',
-        'Developed with Visual Studio Professional and Windows Forms to create a user-friendly application interface.'
-      ]
-    },
-    {
-      role: 'Machine Learning Trainee',
-      org: 'JOVAC, GLA University',
-      location: 'Mathura, Uttar Pradesh',
-      period: 'June 2022 – July 2022',
-      bullets: [
-        'Gained proficiency in fundamental concepts in machine learning using Python and relevant libraries.',
-        'Processed and analyzed datasets to predict outcomes, improving data-driven decision-making.'
-      ]
-    }
-  ],
-  projects: [
-    {
-      title: 'AI-Based Proctored Examination Portal',
-      repo: 'https://github.com/Ansh-Verma/AI-Proctor',
-      live: 'https://ai-proctor-ruddy.vercel.app',
-      period: 'June 2024 – April 2025',
-      bullets: [
-        'Engineered an AI-powered exam portal that ensured secure and fair online assessments.',
-        'Integrated facial recognition and activity monitoring for real-time proctoring.',
-        'Added face authentication, automatic grading, and plagiarism detection for fair assessments.'
-      ],
-      techStack: ['HTML5', 'CSS3', 'Python', 'scikit-learn', 'MERN']
-    }
-  ],
-  skills: {
-    languages: ['Java', 'HTML', 'CSS', 'SQL', 'Markdown'],
-    developerTools: ['VS Code', 'Git', 'GitHub', 'MongoDB', 'Docker', 'n8n'],
-    technologies: ['.NET', 'ReactJS', 'ExpressJS', 'NodeJS'],
-    professional: ['Problem-solving', 'Decision-making', 'Leadership & Team management', 'Adaptability']
-  },
-  achievements: [
-    'Oracle Cloud Infrastructure 2025 Certified Generative AI Professional',
-    'Oracle Cloud Infrastructure 2025 Certified AI Foundations Associate',
-    'Microsoft Certified: Intelligent Document Processing Solution with Azure AI Document Intelligence',
-    'Microsoft Certified: Natural Language Processing Solution with Azure AI Language'
-  ],
-  cocurricular: {
-    role: 'Vice President',
-    org: 'Aikyam GLAU Club – GLA University, Mathura',
-    bullets: [
-      'Led a team of 50 in organizing cultural events and workshops, enhancing campus engagement.',
-      'Chaired weekly strategy meetings and optimized team workflow, ensuring efficient event execution.'
-    ]
-  },
-  summary: 'AI Engineer experienced in predictive modeling, building AI-powered systems, and full-stack development.'
+const INITIAL_MESSAGE = {
+  role: 'assistant',
+  content:
+    "Hi — I'm the assistant. Ask me about Ansh's education, projects, experience, skills, or contact details."
 };
-
-const RESUME_CONTEXT = JSON.stringify(RESUME_DATA, null, 2);
-const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY;
-
-const getFallbackReply = (question) => {
-  const q = question.toLowerCase();
-  if (q.includes('contact') || q.includes('email') || q.includes('phone')) {
-    return `You can reach Ansh at ${RESUME_DATA.contact.email} or ${RESUME_DATA.contact.phone}.\nLinkedIn: ${RESUME_DATA.contact.linkedin}`;
-  }
-  if (q.includes('project')) {
-    return `${RESUME_DATA.projects[0].title}\nRepo: ${RESUME_DATA.projects[0].repo}\nLive: ${RESUME_DATA.projects[0].live}`;
-  }
-  return "I can answer intelligently once you add VITE_GROQ_API_KEY in your .env file. Right now I'm using limited fallback mode.";
-};
-
-async function askGroq(userMessage, chatHistory) {
-  if (!GROQ_API_KEY) return getFallbackReply(userMessage);
-
-  const systemPrompt = `You are Ansh Verma's portfolio assistant.\nRules:\n- Answer naturally, concise, helpful, and professional.\n- Use ONLY the provided resume context.\n- If data is missing, say you don't have that info.\n- Never invent facts.\n\nResume context:\n${RESUME_CONTEXT}`;
-
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    ...chatHistory.slice(-8).map((m) => ({ role: m.role, content: m.content })),
-    { role: 'user', content: userMessage }
-  ];
-
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${GROQ_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.3,
-      max_tokens: 500,
-      messages
-    })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || 'Groq API request failed');
-  }
-
-  const data = await response.json();
-  return data?.choices?.[0]?.message?.content?.trim() || 'I could not generate a response right now.';
-}
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content:
-        "Hi! I'm Ansh's AI assistant powered by an LLM. Ask me anything about his education, experience, projects, skills, certifications, or contact details."
-    }
-  ]);
+  const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -174,32 +21,41 @@ export default function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  async function callServerless(message, history) {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: String(message).slice(0, 4000),
+          history: (history || []).slice(-8).map((m) => ({ role: m.role, content: String(m.content).slice(0, 2000) }))
+        })
+      });
+
+      // Try to parse server response, always expect { reply }
+      const body = await res.json();
+      // If server returns an object with reply, use it, else fallback
+      return (body && body.reply) || 'Sorry - the assistant is temporarily unavailable.';
+    } catch (err) {
+      console.error('Client error calling /api/chat:', err);
+      return 'Sorry - the assistant is temporarily unavailable. Please try again later.';
+    }
+  }
+
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = { role: 'user', content: input.trim() };
-    const nextHistory = [...messages, userMessage];
+    const history = [...messages, userMessage];
 
-    setMessages(nextHistory);
+    // add user message to UI immediately
+    setMessages(history);
     setInput('');
     setIsLoading(true);
 
-    try {
-      const reply = await askGroq(userMessage.content, nextHistory);
-      setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
-    } catch (error) {
-      console.error('Chat API error:', error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content:
-            'Sorry, I could not reach the AI service right now. Please try again in a moment. If this keeps happening, verify your VITE_GROQ_API_KEY.'
-        }
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+    const reply = await callServerless(userMessage.content, history);
+    setMessages((prev) => [...prev, { role: 'assistant', content: reply }]);
+    setIsLoading(false);
   };
 
   return (
@@ -230,7 +86,7 @@ export default function Chatbot() {
             exit={{ opacity: 0, y: 100, scale: 0.8 }}
             className={`fixed bottom-6 right-6 z-50 ${isMinimized ? 'w-80' : 'w-96'} bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cyan-500/30 overflow-hidden`}
             role="dialog"
-            aria-label="AI assistant chat"
+            aria-label="Assistant chat"
           >
             <div className="bg-gradient-to-r from-cyan-500 to-purple-600 p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -238,8 +94,8 @@ export default function Chatbot() {
                   <MessageCircle size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white">AI Assistant</h3>
-                  <p className="text-xs text-white/80">Powered by Groq (free tier)</p>
+                  <h3 className="font-bold text-white">Assistant</h3>
+                  <p className="text-xs text-white/80">Ask about education, projects, experience, or contact.</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -272,9 +128,7 @@ export default function Chatbot() {
                     >
                       <div
                         className={`max-w-[80%] p-3 rounded-2xl ${
-                          msg.role === 'user'
-                            ? 'bg-gradient-to-r from-cyan-500 to-purple-600 text-white'
-                            : 'bg-white/10 text-gray-100'
+                          msg.role === 'user' ? 'bg-gradient-to-r from-cyan-500 to-purple-600 text-white' : 'bg-white/10 text-gray-100'
                         }`}
                       >
                         <p className="text-sm whitespace-pre-line">{msg.content}</p>
@@ -287,14 +141,8 @@ export default function Chatbot() {
                       <div className="bg-white/10 p-3 rounded-2xl">
                         <div className="flex gap-2">
                           <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" />
-                          <div
-                            className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
-                            style={{ animationDelay: '0.2s' }}
-                          />
-                          <div
-                            className="w-2 h-2 bg-pink-400 rounded-full animate-bounce"
-                            style={{ animationDelay: '0.4s' }}
-                          />
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                          <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
                         </div>
                       </div>
                     </div>
