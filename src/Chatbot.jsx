@@ -88,11 +88,10 @@ function renderMarkdown(text) {
   return <>{elements}</>;
 }
 
-// Render inline markdown: **bold**, *italic*, `code`
+// Render inline markdown: **bold**, *italic*, `code`, [link](url), raw URLs
 function renderInline(text) {
   if (!text) return text;
 
-  // Split by markdown patterns and render
   const parts = [];
   let remaining = text;
   let key = 0;
@@ -102,14 +101,20 @@ function renderInline(text) {
     const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
     // Inline code: `text`
     const codeMatch = remaining.match(/`([^`]+)`/);
-    // Italic: *text* (single asterisks, but not inside bold)
+    // Italic: *text* (single asterisks, not inside bold)
     const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/);
+    // Markdown link: [text](url)
+    const mdLinkMatch = remaining.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/);
+    // Raw URL: https://... (not already inside a markdown link)
+    const rawUrlMatch = remaining.match(/(?<!\]\()(?<!\()https?:\/\/[^\s)>,]+/);
 
     // Find earliest match
     const matches = [
       boldMatch ? { type: 'bold', match: boldMatch } : null,
       codeMatch ? { type: 'code', match: codeMatch } : null,
-      italicMatch ? { type: 'italic', match: italicMatch } : null
+      italicMatch ? { type: 'italic', match: italicMatch } : null,
+      mdLinkMatch ? { type: 'mdlink', match: mdLinkMatch } : null,
+      rawUrlMatch ? { type: 'rawurl', match: rawUrlMatch } : null
     ].filter(Boolean).sort((a, b) => a.match.index - b.match.index);
 
     if (matches.length === 0) {
@@ -117,6 +122,7 @@ function renderInline(text) {
       break;
     }
 
+    // If a rawurl is found at the same position as an mdlink, prefer mdlink
     const first = matches[0];
     const idx = first.match.index;
 
@@ -134,8 +140,39 @@ function renderInline(text) {
           {first.match[1]}
         </code>
       );
-    } else {
+    } else if (first.type === 'italic') {
       parts.push(<em key={key++} className="italic text-gray-300">{first.match[1]}</em>);
+    } else if (first.type === 'mdlink') {
+      parts.push(
+        <a
+          key={key++}
+          href={first.match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 decoration-cyan-400/40 hover:decoration-cyan-300 transition-colors break-all"
+        >
+          {first.match[1]}
+        </a>
+      );
+    } else if (first.type === 'rawurl') {
+      // Show a short label for long URLs
+      const url = first.match[0];
+      let label = url;
+      try {
+        const parsed = new URL(url);
+        label = parsed.hostname.replace('www.', '') + (parsed.pathname.length > 1 ? parsed.pathname.slice(0, 20) + (parsed.pathname.length > 20 ? '…' : '') : '');
+      } catch { label = url.length > 40 ? url.slice(0, 38) + '…' : url; }
+      parts.push(
+        <a
+          key={key++}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 decoration-cyan-400/40 hover:decoration-cyan-300 transition-colors"
+        >
+          🔗 {label}
+        </a>
+      );
     }
 
     remaining = remaining.slice(idx + first.match[0].length);

@@ -124,7 +124,7 @@ function getFallbackReply(question = '') {
 
   if (q.includes('contact') || q.includes('email') || q.includes('phone') || q.includes('reach')) {
     return {
-      reply: `📧 **Email:** ${RESUME_DATA.contact.email}\n📱 **Phone:** ${RESUME_DATA.contact.phone}\n🔗 **LinkedIn:** ${RESUME_DATA.contact.linkedin}\n🐙 **GitHub:** ${RESUME_DATA.contact.github}\n📍 **Location:** ${RESUME_DATA.contact.location}`,
+      reply: `📧 **Email:** ${RESUME_DATA.contact.email}\n📱 **Phone:** ${RESUME_DATA.contact.phone}\n🔗 **LinkedIn:** [linkedin.com/in/anshverma](${RESUME_DATA.contact.linkedin})\n🐙 **GitHub:** [github.com/Ansh-Verma](${RESUME_DATA.contact.github})\n📍 **Location:** ${RESUME_DATA.contact.location}`,
       source: 'resume'
     };
   }
@@ -132,7 +132,7 @@ function getFallbackReply(question = '') {
   if (q.includes('project')) {
     const p = RESUME_DATA.projects[0];
     return {
-      reply: `**${p.title}** (${p.period})\n\n${p.summary}\n\n- **Tech Stack:** ${p.tags.join(', ')}\n- **Repo:** ${p.repo}\n- **Live Demo:** ${p.live}`,
+      reply: `**${p.title}** (${p.period})\n\n${p.summary}\n\n- **Tech Stack:** ${p.tags.join(', ')}\n- **Repo:** [View on GitHub](${p.repo})\n- **Live Demo:** [Open Live Demo](${p.live})`,
       source: 'resume'
     };
   }
@@ -148,7 +148,7 @@ function getFallbackReply(question = '') {
   }
 
   if (q.includes('certif')) {
-    const lines = RESUME_DATA.certifications.map(c => `- **${c.name}** (${c.date})`);
+    const lines = RESUME_DATA.certifications.map(c => `- **${c.name}** (${c.date}) — [Verify Certificate](${c.url})`);
     return { reply: `**Certifications:**\n\n${lines.join('\n')}`, source: 'resume' };
   }
 
@@ -231,7 +231,7 @@ FORMATTING RULES
 5. Use bullet lists (- item) for listing multiple items (skills, experiences, projects, certifications).
 6. Use numbered lists (1. step) for sequential or ranked items.
 7. Keep responses well-structured with clear sections when covering multiple topics.
-8. When mentioning URLs, format them as plain text (not markdown links).
+8. When including URLs, ALWAYS use markdown link syntax: [descriptive label](url). For example: [View on GitHub](https://github.com/...) or [Verify Certificate](https://...). NEVER paste raw URLs.
 
 TONE & LENGTH
 9. Be professional, helpful, concise, and enthusiastic. Match the user's depth:
@@ -251,7 +251,7 @@ HOW TO ANSWER COMMON REQUESTS
 17. "Skills" → Group into Languages, Frameworks, and Tools.
 18. "Experience" → List each role with org, period, and description.
 19. "Education" → List each degree with institute, period, and grade.
-20. "Certifications" → List each certification with date.
+20. "Certifications" → List each certification with date and a [Verify Certificate](url) link.
 21. "Elevator pitch / LinkedIn bio" → Produce a polished 2–3 sentence pitch based ONLY on the summary.
 22. "Interview help / strengths" → Use resume facts to create 3–5 talking points.
 
