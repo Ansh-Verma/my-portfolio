@@ -2,55 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
-/* =========================
-   THEME COLOR VARIABLES
-   ========================= */
+/* ═══════════════════════════════════════
+   DESIGN SYSTEM — "Obsidian" Theme
+   Premium, futuristic, minimalist palette
+   ═══════════════════════════════════════ */
 
-/* LIGHT mode (default) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ──── LIGHT MODE (default) ──── */
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-primary: #fafafa;
+  --bg-secondary: #f0f0f0;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: rgba(255, 255, 255, 0.95);
+  --bg-elevated: #ffffff;
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
+  --text-primary: #0a0a0a;
+  --text-secondary: #525252;
+  --text-tertiary: #a3a3a3;
 
-  --border-color: rgba(15, 23, 42, 0.08);
+  --border-color: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.12);
+  --border-glow: rgba(245, 158, 11, 0.3);
 
-  --accent-cyan: #06b6d4;
-  --accent-purple: #8b5cf6;
+  --accent-primary: #f59e0b;   /* warm amber */
+  --accent-secondary: #3b82f6; /* electric blue */
+  --accent-success: #10b981;
+  --accent-danger: #ef4444;
 
-  --scrollbar-track: rgba(0, 0, 0, 0.04);
-  --scrollbar-thumb-gradient-start: #06b6d4;
-  --scrollbar-thumb-gradient-end: #8b5cf6;
+  --glow-color: rgba(245, 158, 11, 0.08);
+  --glow-strong: rgba(245, 158, 11, 0.15);
+
+  --scrollbar-track: rgba(0, 0, 0, 0.03);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
+  --shadow-glow: 0 0 40px var(--glow-color);
 }
 
-/* DARK mode (applies when html has class "dark") */
+/* ──── DARK MODE ──── */
 html.dark {
-  --bg-primary: #020617;
-  --bg-secondary: #0f172a;
-  --bg-card: rgba(15, 23, 42, 0.6);
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141414;
+  --bg-card: rgba(20, 20, 20, 0.7);
+  --bg-card-hover: rgba(30, 30, 30, 0.85);
+  --bg-elevated: #1a1a1a;
 
-  --text-primary: #e5e7eb;
-  --text-secondary: #9ca3af;
+  --text-primary: #fafafa;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #525252;
 
-  --border-color: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-glow: rgba(245, 158, 11, 0.25);
 
-  --accent-cyan: #22d3ee;
-  --accent-purple: #a78bfa;
+  --accent-primary: #f59e0b;
+  --accent-secondary: #60a5fa;
+  --accent-success: #34d399;
+  --accent-danger: #f87171;
 
-  --scrollbar-track: rgba(255, 255, 255, 0.04);
-  --scrollbar-thumb-gradient-start: #22d3ee;
-  --scrollbar-thumb-gradient-end: #a78bfa;
+  --glow-color: rgba(245, 158, 11, 0.06);
+  --glow-strong: rgba(245, 158, 11, 0.12);
+
+  --scrollbar-track: rgba(255, 255, 255, 0.02);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 60px var(--glow-color);
 }
 
-/* =========================
-   GLOBAL LAYOUT + ACCESSIBILITY
-   ========================= */
-
-html,
-body,
-#root {
+/* ──── GLOBAL DEFAULTS ──── */
+html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -58,22 +92,34 @@ body,
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Use theme variables for background and text */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
+  font-family: var(--font-sans);
   background: var(--bg-primary);
   color: var(--text-primary);
   overflow-x: hidden;
-  /* Do NOT hide cursor globally. Use .custom-cursor-active to hide it when custom cursor is enabled. */
   cursor: auto;
+  letter-spacing: -0.01em;
 }
 
-/* When the custom cursor component is active, this class will hide the system cursor */
+* {
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--accent-primary);
+  color: #0a0a0a;
+}
+
+/* Custom cursor */
 .custom-cursor-active,
 .custom-cursor-active * {
   cursor: none !important;
 }
 
-/* Respect prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
@@ -81,126 +127,69 @@ body {
   }
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
-
-/* =========================
-   GLASSMORPHISM / SURFACES
-   ========================= */
+/* ═══════════════════════════════════════
+   SURFACE SYSTEM — Cards, Glass, Panels
+   ═══════════════════════════════════════ */
 
 .glass {
-  /* theme-aware card background */
   background: var(--bg-card);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* subtle hover for interactive glass surfaces */
 .glass-hover:hover {
-  /* Slightly stronger effect on dark mode, subtle on light */
-  background: color-mix(in srgb, var(--bg-card) 85%, rgba(255,255,255,0.03) 15%);
-  border-color: color-mix(in srgb, var(--border-color) 70%, var(--accent-cyan) 30%);
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
 }
 
-/* If you need a white-based card in light mode, you can use .card-light */
-.card-light {
-  background: #ffffff;
-  color: var(--text-primary);
-  border: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-/* =========================
-   NEUMORPHISM
-   (adapt shadows per theme)
-   ========================= */
-.neumorphism {
+/* Premium glow card — mouse-tracking glow done via JS + CSS var */
+.glow-card {
+  position: relative;
   background: var(--bg-card);
-  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* NOTE: no overflow:hidden — allows dropdowns to render above the card */
 }
 
-/* dark-mode neu */
-html.dark .neumorphism {
-  box-shadow: 8px 8px 16px rgba(0,0,0,0.45), -8px -8px 16px rgba(255,255,255,0.02);
+.glow-card::before {
+  content: '';
+  position: absolute;
+  top: var(--mouse-y, 50%);
+  left: var(--mouse-x, 50%);
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, var(--glow-strong) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+  border-radius: inherit;
+  clip-path: inset(0 round inherit);
 }
 
-/* light-mode neu */
-html:not(.dark) .neumorphism {
-  box-shadow: 8px 8px 16px rgba(0,0,0,0.06), -8px -8px 16px rgba(255,255,255,0.9);
-}
-
-/* inset variant */
-.neumorphism-inset {
-  background: var(--bg-card);
-}
-
-html.dark .neumorphism-inset {
-  box-shadow: inset 5px 5px 10px rgba(0,0,0,0.45), inset -5px -5px 10px rgba(255,255,255,0.02);
-}
-
-html:not(.dark) .neumorphism-inset {
-  box-shadow: inset 5px 5px 10px rgba(0,0,0,0.06), inset -5px -5px 10px rgba(255,255,255,0.95);
-}
-
-/* =========================
-   SCROLLBAR (WebKit)
-   use theme-aware variables
-   ========================= */
-
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--scrollbar-thumb-gradient-start), var(--scrollbar-thumb-gradient-end));
-  border-radius: 10px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  filter: brightness(0.95);
-}
-
-/* =========================
-   PARTICLES / GLOW (reduce in light mode)
-   ========================= */
-
-/* use .glow or .particle on elements that create neon effects */
-.glow, .particle, .neon {
-  transition: opacity 200ms ease, filter 200ms ease;
-}
-
-/* reduce glow intensity when NOT in dark mode */
-html:not(.dark) .glow,
-html:not(.dark) .particle,
-html:not(.dark) .neon {
-  opacity: 0.18;
-  filter: none;
-  mix-blend-mode: normal;
-}
-
-/* strong glow for dark mode */
-html.dark .glow,
-html.dark .particle,
-html.dark .neon {
+.glow-card:hover::before {
   opacity: 1;
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 8px 32px rgba(139,92,246,0.18)) blur(0.6px);
 }
 
-/* =========================
-   TYPOGRAPHY HELPERS
-   ========================= */
+.glow-card:hover {
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-glow);
+}
+
+.glow-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════
+   TYPOGRAPHY
+   ═══════════════════════════════════════ */
 
 .text-primary {
   color: var(--text-primary) !important;
@@ -210,49 +199,241 @@ html.dark .neon {
   color: var(--text-secondary) !important;
 }
 
-/* Gradient headings should use the theme accents */
+.text-tertiary {
+  color: var(--text-tertiary) !important;
+}
+
 .gradient-heading {
-  background-image: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  background-image: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* Fallback for elements that previously used tailwind text-white/gray classes */
-.fallback-muted {
-  color: var(--text-secondary);
+.font-mono {
+  font-family: var(--font-mono) !important;
 }
 
-/* =========================
-   UTILITY / SMALL FIXES
-   ========================= */
+/* hero giant text effect */
+.hero-title {
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+}
 
-/* ensure interactive elements are readable */
-button, a, input, textarea {
+/* ═══════════════════════════════════════
+   BENTO BOX GRID
+   ═══════════════════════════════════════ */
+
+.bento-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.bento-grid-3 {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 768px) {
+  .bento-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bento-item {
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-item:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ═══════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* ═══════════════════════════════════════
+   INTERACTIVE ELEMENTS
+   ═══════════════════════════════════════ */
+
+button, a, input, textarea, select {
   color: inherit;
+  font-family: inherit;
 }
 
-/* disable pointer-events none accidentally applied higher up */
-.pointer-events-restore {
-  pointer-events: auto !important;
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
-/* small accessibility helper for focus outlines */
-:focus {
-  outline: 3px solid color-mix(in srgb, var(--accent-cyan) 40%, transparent 60%);
-  outline-offset: 3px;
+/* Pill / Tag / Badge */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
 }
 
+.pill:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
 
+/* Accent button */
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--accent-primary);
+  color: #0a0a0a;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
-/* =========================
-   DEVELOPER NOTES
-   ========================= */
+.btn-accent:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
 
-/*
- - Use the .custom-cursor-active class (added by your CustomCursor component) to hide the system cursor.
- - Theme switching should add class "dark" to <html> for dark mode. The default (no .dark) is light mode.
- - Place heavy particles/gradient blobs inside elements with `hidden dark:block` so they appear only in dark mode.
- - Use .glass on card wrappers to get consistent surfaces across themes.
- - Use .gradient-heading for hero titles and replace fixed 'from-* to-*' tailwind classes with this class so headings adapt.
-*/
+/* Ghost button */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-ghost:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: var(--glow-color);
+}
+
+/* ═══════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px var(--glow-color); }
+  50% { box-shadow: 0 0 40px var(--glow-strong); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-blink { animation: blink 1s infinite; }
+.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-float { animation: float 6s ease-in-out infinite; }
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+}
+.animate-spin-slow { animation: spin-slow 20s linear infinite; }
+
+/* ═══════════════════════════════════════
+   NOISE TEXTURE OVERLAY (dark mode)
+   ═══════════════════════════════════════ */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* ═══════════════════════════════════════
+   SECTION DIVIDER
+   ═══════════════════════════════════════ */
+.section-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--border-color) 20%,
+    var(--accent-primary) 50%,
+    var(--border-color) 80%,
+    transparent
+  );
+  margin: 4rem 0;
+}

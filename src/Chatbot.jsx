@@ -37,14 +37,12 @@ function renderMarkdown(text) {
   while (i < lines.length) {
     const line = lines[i];
 
-    // Blank line → spacer
     if (!line.trim()) {
       elements.push(<div key={i} className="h-2" />);
       i++;
       continue;
     }
 
-    // Bullet list (- item or * item)
     if (/^[\s]*[-*]\s/.test(line)) {
       const items = [];
       while (i < lines.length && /^[\s]*[-*]\s/.test(lines[i])) {
@@ -61,7 +59,6 @@ function renderMarkdown(text) {
       continue;
     }
 
-    // Numbered list (1. item)
     if (/^\d+\.\s/.test(line)) {
       const items = [];
       while (i < lines.length && /^\d+\.\s/.test(lines[i])) {
@@ -78,7 +75,6 @@ function renderMarkdown(text) {
       continue;
     }
 
-    // Regular paragraph
     elements.push(
       <p key={i} className="text-sm leading-relaxed">{renderInline(line)}</p>
     );
@@ -88,7 +84,6 @@ function renderMarkdown(text) {
   return <>{elements}</>;
 }
 
-// Render inline markdown: **bold**, *italic*, `code`, [link](url), raw URLs
 function renderInline(text) {
   if (!text) return text;
 
@@ -97,18 +92,12 @@ function renderInline(text) {
   let key = 0;
 
   while (remaining.length > 0) {
-    // Bold: **text**
     const boldMatch = remaining.match(/\*\*(.+?)\*\*/);
-    // Inline code: `text`
     const codeMatch = remaining.match(/`([^`]+)`/);
-    // Italic: *text* (single asterisks, not inside bold)
     const italicMatch = remaining.match(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/);
-    // Markdown link: [text](url)
     const mdLinkMatch = remaining.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/);
-    // Raw URL: https://... (not already inside a markdown link)
     const rawUrlMatch = remaining.match(/(?<!\]\()(?<!\()https?:\/\/[^\s)>,]+/);
 
-    // Find earliest match
     const matches = [
       boldMatch ? { type: 'bold', match: boldMatch } : null,
       codeMatch ? { type: 'code', match: codeMatch } : null,
@@ -122,40 +111,33 @@ function renderInline(text) {
       break;
     }
 
-    // If a rawurl is found at the same position as an mdlink, prefer mdlink
     const first = matches[0];
     const idx = first.match.index;
 
-    // Text before match
     if (idx > 0) {
       parts.push(<span key={key++}>{remaining.slice(0, idx)}</span>);
     }
 
-    // Render match
     if (first.type === 'bold') {
-      parts.push(<strong key={key++} className="font-semibold text-white">{first.match[1]}</strong>);
+      parts.push(<strong key={key++} className="font-semibold" style={{ color: 'var(--text-primary)' }}>{first.match[1]}</strong>);
     } else if (first.type === 'code') {
       parts.push(
-        <code key={key++} className="px-1.5 py-0.5 bg-white/10 rounded text-xs font-mono text-cyan-300">
+        <code key={key++} className="px-1.5 py-0.5 rounded text-xs font-mono"
+          style={{ background: 'var(--bg-secondary)', color: 'var(--accent-primary)' }}>
           {first.match[1]}
         </code>
       );
     } else if (first.type === 'italic') {
-      parts.push(<em key={key++} className="italic text-gray-300">{first.match[1]}</em>);
+      parts.push(<em key={key++} className="italic" style={{ color: 'var(--text-secondary)' }}>{first.match[1]}</em>);
     } else if (first.type === 'mdlink') {
       parts.push(
-        <a
-          key={key++}
-          href={first.match[2]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 decoration-cyan-400/40 hover:decoration-cyan-300 transition-colors break-all"
-        >
+        <a key={key++} href={first.match[2]} target="_blank" rel="noopener noreferrer"
+          className="underline underline-offset-2 transition-colors"
+          style={{ color: 'var(--accent-primary)' }}>
           {first.match[1]}
         </a>
       );
     } else if (first.type === 'rawurl') {
-      // Show a short label for long URLs
       const url = first.match[0];
       let label = url;
       try {
@@ -163,13 +145,9 @@ function renderInline(text) {
         label = parsed.hostname.replace('www.', '') + (parsed.pathname.length > 1 ? parsed.pathname.slice(0, 20) + (parsed.pathname.length > 20 ? '…' : '') : '');
       } catch { label = url.length > 40 ? url.slice(0, 38) + '…' : url; }
       parts.push(
-        <a
-          key={key++}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 decoration-cyan-400/40 hover:decoration-cyan-300 transition-colors"
-        >
+        <a key={key++} href={url} target="_blank" rel="noopener noreferrer"
+          className="underline underline-offset-2 transition-colors"
+          style={{ color: 'var(--accent-primary)' }}>
           🔗 {label}
         </a>
       );
@@ -181,14 +159,12 @@ function renderInline(text) {
   return <>{parts}</>;
 }
 
-// ─── Format timestamp ───────────────────────────────────────────────────────
 function formatTime(ts) {
   if (!ts) return '';
   const d = new Date(ts);
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-// ─── Check if reply is an error ─────────────────────────────────────────────
 function isErrorReply(content) {
   const lower = (content || '').toLowerCase();
   return ERROR_PHRASES.some(p => lower.includes(p));
@@ -205,12 +181,10 @@ export default function Chatbot() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto-scroll on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  // Focus input when chat opens
   useEffect(() => {
     if (isOpen && !isMinimized) {
       setTimeout(() => inputRef.current?.focus(), 300);
@@ -277,10 +251,8 @@ export default function Chatbot() {
   }, [sendMessage]);
 
   const handleRetry = useCallback((msgIndex) => {
-    // Find the last user message before or at this index
     for (let i = msgIndex - 1; i >= 0; i--) {
       if (messages[i].role === 'user') {
-        // Remove messages from that user message onward and resend
         const trimmed = messages.slice(0, i);
         setMessages(trimmed);
         sendMessage(messages[i].content);
@@ -299,7 +271,7 @@ export default function Chatbot() {
 
   return (
     <>
-      {/* ── FAB Button ─────────────────────────────────────────────────── */}
+      {/* ── FAB Button ─────────────────────────────────────────── */}
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -309,77 +281,92 @@ export default function Chatbot() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 p-4 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full shadow-2xl hover:shadow-cyan-500/40 transition-shadow duration-300"
+            className="fixed bottom-6 right-6 z-50 p-4 rounded-2xl shadow-lg transition-shadow duration-300"
+            style={{
+              background: 'var(--accent-primary)',
+              color: '#0a0a0a',
+              boxShadow: '0 4px 20px rgba(245, 158, 11, 0.3)',
+            }}
             aria-label="Open chat"
           >
-            <MessageCircle size={28} className="text-white" />
-            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-slate-900 animate-pulse" />
+            <MessageCircle size={24} />
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 animate-pulse"
+              style={{ background: 'var(--accent-success)', borderColor: 'var(--bg-primary)' }} />
           </motion.button>
         )}
       </AnimatePresence>
 
-      {/* ── Chat Window ────────────────────────────────────────────────── */}
+      {/* ── Chat Window ────────────────────────────────────────── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 80, scale: 0.85 }}
+            initial={{ opacity: 0, y: 60, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 80, scale: 0.85 }}
+            exit={{ opacity: 0, y: 60, scale: 0.9 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={`fixed z-50 ${
               isMinimized
                 ? 'bottom-6 right-6 w-80'
                 : 'bottom-4 right-4 sm:bottom-6 sm:right-6 w-[calc(100%-2rem)] sm:w-[420px]'
-            } bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-cyan-500/20 overflow-hidden flex flex-col`}
-            style={{ maxHeight: isMinimized ? 'auto' : 'min(600px, calc(100vh - 2rem))' }}
+            } rounded-2xl shadow-2xl overflow-hidden flex flex-col`}
+            style={{
+              maxHeight: isMinimized ? 'auto' : 'min(600px, calc(100vh - 2rem))',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border-color)',
+            }}
             role="dialog"
             aria-label="Assistant chat"
           >
-            {/* ── Header ───────────────────────────────────────────────── */}
-            <div className="bg-gradient-to-r from-cyan-500 to-purple-600 px-4 py-3 flex items-center justify-between shrink-0">
+            {/* ── Header ───────────────────────────────────── */}
+            <div className="px-4 py-3 flex items-center justify-between shrink-0 border-b"
+              style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}>
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                  <MessageCircle size={18} className="text-white" />
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                  style={{ background: 'var(--accent-primary)', color: '#0a0a0a' }}>
+                  <MessageCircle size={16} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm">Portfolio Assistant</h3>
+                  <h3 className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Portfolio Assistant</h3>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse" />
-                    <p className="text-[11px] text-white/70">Online • Ask anything</p>
+                    <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: 'var(--accent-success)' }} />
+                    <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>Online · Ask anything</p>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-1">
                 <button
                   onClick={handleClearChat}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-2 rounded-lg transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}
                   aria-label="Clear chat"
                   title="Clear chat"
                 >
-                  <Trash2 size={15} className="text-white/80" />
+                  <Trash2 size={14} />
                 </button>
                 <button
                   onClick={() => setIsMinimized(!isMinimized)}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-2 rounded-lg transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}
                   aria-label={isMinimized ? 'Restore chat' : 'Minimize chat'}
                 >
-                  <Minimize2 size={15} className="text-white/80" />
+                  <Minimize2 size={14} />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  className="p-2 rounded-lg transition-colors"
+                  style={{ color: 'var(--text-tertiary)' }}
                   aria-label="Close chat"
                 >
-                  <X size={15} className="text-white/80" />
+                  <X size={14} />
                 </button>
               </div>
             </div>
 
             {!isMinimized && (
               <>
-                {/* ── Messages ───────────────────────────────────────── */}
+                {/* ── Messages ──────────────────────────────── */}
                 <div
-                  className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent"
+                  className="flex-1 overflow-y-auto p-4 space-y-3"
                   aria-live="polite"
                 >
                   {messages.map((msg, idx) => (
@@ -392,11 +379,17 @@ export default function Chatbot() {
                     >
                       <div className="flex flex-col gap-1 max-w-[85%]">
                         <div
-                          className={`p-3 rounded-2xl ${
-                            msg.role === 'user'
-                              ? 'bg-gradient-to-r from-cyan-500 to-purple-600 text-white rounded-br-md'
-                              : 'bg-white/[0.07] text-gray-100 rounded-bl-md border border-white/[0.06]'
-                          }`}
+                          className="p-3 rounded-2xl"
+                          style={msg.role === 'user' ? {
+                            background: 'var(--accent-primary)',
+                            color: '#0a0a0a',
+                            borderBottomRightRadius: '6px',
+                          } : {
+                            background: 'var(--bg-card)',
+                            color: 'var(--text-primary)',
+                            borderBottomLeftRadius: '6px',
+                            border: '1px solid var(--border-color)',
+                          }}
                         >
                           {msg.role === 'assistant' ? (
                             <div className="space-y-1.5">{renderMarkdown(msg.content)}</div>
@@ -405,13 +398,13 @@ export default function Chatbot() {
                           )}
                         </div>
 
-                        {/* Timestamp + Retry */}
                         <div className={`flex items-center gap-2 px-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <span className="text-[10px] text-gray-500">{formatTime(msg.timestamp)}</span>
+                          <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>{formatTime(msg.timestamp)}</span>
                           {msg.role === 'assistant' && isErrorReply(msg.content) && (
                             <button
                               onClick={() => handleRetry(idx)}
-                              className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors"
+                              className="flex items-center gap-1 text-[10px] transition-colors"
+                              style={{ color: 'var(--accent-primary)' }}
                               title="Retry"
                             >
                               <RotateCcw size={10} />
@@ -437,7 +430,7 @@ export default function Chatbot() {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => handleChipClick(chip.query)}
-                          className="px-3 py-1.5 text-xs bg-white/[0.08] hover:bg-white/[0.15] border border-white/10 hover:border-cyan-500/40 rounded-full text-gray-300 hover:text-white transition-all duration-200"
+                          className="pill text-xs cursor-pointer"
                         >
                           {chip.label}
                         </motion.button>
@@ -452,16 +445,14 @@ export default function Chatbot() {
                       animate={{ opacity: 1, y: 0 }}
                       className="flex justify-start"
                     >
-                      <div className="bg-white/[0.07] p-3 rounded-2xl rounded-bl-md border border-white/[0.06]">
+                      <div className="p-3 rounded-2xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderBottomLeftRadius: '6px' }}>
                         <div className="flex items-center gap-1.5">
                           {[0, 1, 2].map((dot) => (
                             <motion.div
                               key={dot}
                               className="w-2 h-2 rounded-full"
-                              style={{
-                                background: ['#06b6d4', '#a855f7', '#ec4899'][dot]
-                              }}
-                              animate={{ y: [0, -6, 0] }}
+                              style={{ background: 'var(--accent-primary)' }}
+                              animate={{ y: [0, -5, 0], opacity: [0.4, 1, 0.4] }}
                               transition={{
                                 duration: 0.6,
                                 repeat: Infinity,
@@ -478,8 +469,8 @@ export default function Chatbot() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* ── Input Area ──────────────────────────────────────── */}
-                <div className="p-3 border-t border-white/[0.08] shrink-0 bg-slate-900/50">
+                {/* ── Input Area ──────────────────────────────── */}
+                <div className="p-3 border-t shrink-0" style={{ borderColor: 'var(--border-color)', background: 'var(--bg-card)' }}>
                   <div className="flex gap-2">
                     <div className="relative flex-1">
                       <input
@@ -490,19 +481,22 @@ export default function Chatbot() {
                         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
                         placeholder="Ask anything about Ansh..."
                         maxLength={4000}
-                        className="w-full bg-white/[0.07] border border-white/[0.12] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/20 transition-all"
+                        className="w-full rounded-xl px-4 py-2.5 text-sm transition-all"
+                        style={{
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-color)',
+                          color: 'var(--text-primary)',
+                        }}
                         aria-label="Type your message"
                       />
-                      {/* Character counter */}
                       <AnimatePresence>
                         {charCount > 200 && (
                           <motion.span
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className={`absolute right-3 top-1/2 -translate-y-1/2 text-[10px] ${
-                              charCount > 3500 ? 'text-red-400' : 'text-gray-500'
-                            }`}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px]"
+                            style={{ color: charCount > 3500 ? 'var(--accent-danger)' : 'var(--text-tertiary)' }}
                           >
                             {charCount}/4000
                           </motion.span>
@@ -514,10 +508,14 @@ export default function Chatbot() {
                       whileTap={{ scale: 0.9 }}
                       onClick={handleSend}
                       disabled={!input.trim() || isLoading}
-                      className="p-2.5 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+                      className="p-2.5 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        background: 'var(--accent-primary)',
+                        color: '#0a0a0a',
+                      }}
                       aria-label="Send message"
                     >
-                      <Send size={18} className="text-white" />
+                      <Send size={16} />
                     </motion.button>
                   </div>
                 </div>
