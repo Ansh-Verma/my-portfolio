@@ -397,7 +397,7 @@ export default function Portfolio() {
             className="text-base md:text-lg mb-10 max-w-2xl mx-auto"
             style={{ color: 'var(--text-secondary)' }}
           >
-            AI Engineer · B.Tech CSE @ GLA University · Oracle & Microsoft Certified
+            AI Engineer · Oracle & Microsoft Certified
           </motion.p>
 
           {/* Stats */}
