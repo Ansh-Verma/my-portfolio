@@ -6,52 +6,10 @@
 
 /* ═══════════════════════════════════════
    DESIGN SYSTEM — "Obsidian" Theme
-   Premium, futuristic, minimalist palette
+   Dark mode only
    ═══════════════════════════════════════ */
 
-/* ──── LIGHT MODE (default) ──── */
 :root {
-  --bg-primary: #fafafa;
-  --bg-secondary: #f0f0f0;
-  --bg-card: rgba(255, 255, 255, 0.85);
-  --bg-card-hover: rgba(255, 255, 255, 0.95);
-  --bg-elevated: #ffffff;
-
-  --text-primary: #0a0a0a;
-  --text-secondary: #525252;
-  --text-tertiary: #a3a3a3;
-
-  --border-color: rgba(0, 0, 0, 0.06);
-  --border-hover: rgba(0, 0, 0, 0.12);
-  --border-glow: rgba(245, 158, 11, 0.3);
-
-  --accent-primary: #f59e0b;   /* warm amber */
-  --accent-secondary: #3b82f6; /* electric blue */
-  --accent-success: #10b981;
-  --accent-danger: #ef4444;
-
-  --glow-color: rgba(245, 158, 11, 0.08);
-  --glow-strong: rgba(245, 158, 11, 0.15);
-
-  --scrollbar-track: rgba(0, 0, 0, 0.03);
-  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
-
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
-
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
-  --shadow-glow: 0 0 40px var(--glow-color);
-}
-
-/* ──── DARK MODE ──── */
-html.dark {
   --bg-primary: #0a0a0a;
   --bg-secondary: #141414;
   --bg-card: rgba(20, 20, 20, 0.7);
@@ -66,8 +24,8 @@ html.dark {
   --border-hover: rgba(255, 255, 255, 0.12);
   --border-glow: rgba(245, 158, 11, 0.25);
 
-  --accent-primary: #f59e0b;
-  --accent-secondary: #60a5fa;
+  --accent-primary: #f59e0b;   /* warm amber */
+  --accent-secondary: #60a5fa; /* electric blue */
   --accent-success: #34d399;
   --accent-danger: #f87171;
 
@@ -76,6 +34,14 @@ html.dark {
 
   --scrollbar-track: rgba(255, 255, 255, 0.02);
   --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
 
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
@@ -112,12 +78,6 @@ body {
 ::selection {
   background: var(--accent-primary);
   color: #0a0a0a;
-}
-
-/* Custom cursor */
-.custom-cursor-active,
-.custom-cursor-active * {
-  cursor: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -395,6 +355,13 @@ button, a, input, textarea, select {
   to { transform: rotate(360deg); }
 }
 
+@keyframes shimmer-travel {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+
+
 .animate-blink { animation: blink 1s infinite; }
 .animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
 .animate-float { animation: float 6s ease-in-out infinite; }
@@ -407,6 +374,81 @@ button, a, input, textarea, select {
   animation: gradient-shift 4s ease infinite;
 }
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
+
+/* ═══════════════════════════════════════
+   SCROLL PROGRESS BAR
+   ═══════════════════════════════════════ */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  z-index: 9999;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  transform-origin: left;
+}
+
+/* ═══════════════════════════════════════
+   GLOW FOCUS FOR INPUTS
+   ═══════════════════════════════════════ */
+.input-glow:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15), 0 0 20px rgba(245, 158, 11, 0.1);
+  outline: none;
+}
+
+/* ═══════════════════════════════════════
+   SHIMMER BUTTON
+   ═══════════════════════════════════════ */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.25) 45%,
+    rgba(255, 255, 255, 0.25) 55%,
+    transparent 65%
+  );
+  animation: shimmer-travel 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════
+   BACK TO TOP BUTTON
+   ═══════════════════════════════════════ */
+.back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-primary);
+  color: #0a0a0a;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(245, 158, 11, 0.3);
+  transition: all 0.3s ease;
+}
+.back-to-top:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 30px rgba(245, 158, 11, 0.4);
+}
+
+
 
 /* ═══════════════════════════════════════
    NOISE TEXTURE OVERLAY (dark mode)

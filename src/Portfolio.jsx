@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
-  Menu, X, Github, Linkedin, Mail, ExternalLink, ChevronDown,
+  Menu, X, Github, Linkedin, Mail, ExternalLink, ChevronDown, ChevronUp,
   Terminal, Brain, Code, Download, Send, Award,
-  GraduationCap, Trophy, Users, MapPin, Phone, Sun, Moon,
+  GraduationCap, Trophy, Users, MapPin, Phone,
   Calendar, GitBranch, TrendingUp, ArrowUpRight, Sparkles
 } from 'lucide-react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { useTheme } from './ThemeContext';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import SkillsRadar from './SkillsRadar';
-import Brain3D from './Brain3D';
 import emailjs from '@emailjs/browser';
 import CodePlayground from './CodePlayground';
+import TiltCard from './TiltCard';
+import { BeamsBackground } from './components/ui/BeamsBackground';
 
 /* ───────────────────────────────────────────────
    DATA
@@ -126,29 +126,77 @@ function useGlowCards(containerRef) {
 }
 
 /* ───────────────────────────────────────────────
-   SECTION HEADING COMPONENT
+   ANIMATED COUNTER HOOK — counts up from 0
+   ─────────────────────────────────────────────── */
+function useAnimatedCounter(target, duration = 1500, inView = false) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    const num = parseFloat(target);
+    if (isNaN(num)) { setCount(target); return; }
+    let start = 0;
+    const startTime = performance.now();
+    const step = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      setCount(Math.round(eased * num));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration, inView]);
+  return count;
+}
+
+
+
+/* ───────────────────────────────────────────────
+   SECTION HEADING COMPONENT — word-staggered
    ─────────────────────────────────────────────── */
 function SectionHeading({ badge, title, subtitle }) {
+  const words = title.split(' ');
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       className="text-center mb-16"
     >
       {badge && (
-        <span
+        <motion.span
+          initial={{ opacity: 0, scale: 0.8 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.4 }}
           className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border mb-4"
           style={{ borderColor: 'var(--border-color)', color: 'var(--accent-primary)' }}
         >
           {badge}
-        </span>
+        </motion.span>
       )}
       <h2 className="hero-title text-4xl md:text-6xl mb-4">
-        <span className="gradient-heading">{title}</span>
+        {words.map((word, i) => (
+          <motion.span
+            key={i}
+            initial={{ opacity: 0, filter: 'blur(8px)', y: 15 }}
+            whileInView={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.4, delay: i * 0.1, ease: 'easeOut' }}
+            className="gradient-heading inline-block mr-[0.3em]"
+          >
+            {word}
+          </motion.span>
+        ))}
       </h2>
       {subtitle && (
-        <p className="text-secondary max-w-2xl mx-auto text-lg">{subtitle}</p>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: words.length * 0.1 }}
+          className="text-secondary max-w-2xl mx-auto text-lg"
+        >
+          {subtitle}
+        </motion.p>
       )}
     </motion.div>
   );
@@ -157,23 +205,84 @@ function SectionHeading({ badge, title, subtitle }) {
 /* ───────────────────────────────────────────────
    MAIN PORTFOLIO COMPONENT
    ─────────────────────────────────────────────── */
+/* ───────────────────────────────────────────────
+   ANIMATED SKILL BAR — counts up percentage
+   ─────────────────────────────────────────────── */
+function SkillBar({ skill, index }) {
+  const [inView, setInView] = useState(false);
+  const animatedLevel = useAnimatedCounter(skill.level, 1200, inView);
+  return (
+    <motion.div
+      key={index}
+      initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      onViewportEnter={() => setInView(true)}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.08 }}
+      className="glow-card p-4"
+      style={{ borderRadius: 'var(--radius-md)' }}
+    >
+      <div className="flex justify-between mb-2">
+        <span className="text-sm font-semibold">{skill.name}</span>
+        <span className="text-sm font-bold font-mono" style={{ color: 'var(--accent-primary)' }}>{animatedLevel}%</span>
+      </div>
+      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+        <motion.div
+          initial={{ width: 0 }}
+          whileInView={{ width: `${skill.level}%` }}
+          viewport={{ once: true }}
+          transition={{ duration: 1, delay: index * 0.08 }}
+          className="h-full rounded-full"
+          style={{ background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))' }}
+        />
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Portfolio() {
-  const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
   const [typedText, setTypedText] = useState('');
   const [yearsOfExp, setYearsOfExp] = useState(0);
   const [activeSkillCategory, setActiveSkillCategory] = useState('languages');
   const [formStatus, setFormStatus] = useState(null); // null | 'sending' | 'sent' | 'error'
+  const [activeSection, setActiveSection] = useState('home');
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const containerRef = useRef(null);
   const fullText = "Building Intelligent Systems";
 
   useGlowCards(containerRef);
 
   // Parallax for hero
-  const { scrollY } = useScroll();
+  const { scrollY, scrollYProgress } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 150]);
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+  const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+  // Active section tracking + back-to-top
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    setShowBackToTop(latest > 500);
+  });
+
+  useEffect(() => {
+    const sectionIds = ['home', 'about', 'experience', 'projects', 'playground', 'skills', 'contact'];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: '-30% 0px -60% 0px', threshold: 0 }
+    );
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
 
   // Typing effect
   useEffect(() => {
@@ -247,8 +356,14 @@ export default function Portfolio() {
   return (
     <div ref={containerRef} className="min-h-screen relative" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
 
-      {/* Noise overlay (dark mode only) */}
-      <div className="noise-overlay hidden dark:block" />
+      {/* Global animated beams background */}
+      <BeamsBackground intensity="medium" />
+
+      {/* Scroll progress bar */}
+      <motion.div className="scroll-progress" style={{ scaleX, width: '100%' }} />
+
+      {/* Noise overlay */}
+      <div className="noise-overlay" />
 
       {/* Ambient gradient blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -282,30 +397,38 @@ export default function Portfolio() {
 
             {/* Desktop nav */}
             <div className="hidden md:flex items-center gap-1">
-              {navItems.map((item, i) => (
-                <motion.a
-                  key={item}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  href={`#${item.toLowerCase()}`}
-                  className="px-3 py-2 text-sm font-medium rounded-lg transition-colors"
-                  style={{ color: 'var(--text-secondary)' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--glow-color)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-secondary)'; e.currentTarget.style.background = 'transparent'; }}
-                >
-                  {item}
-                </motion.a>
-              ))}
-
-              <button
-                onClick={toggleTheme}
-                className="ml-3 p-2 rounded-lg transition-colors"
-                style={{ color: 'var(--text-secondary)', border: '1px solid var(--border-color)' }}
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              </button>
+              {navItems.map((item, i) => {
+                const isActive = activeSection === item.toLowerCase();
+                return (
+                  <motion.a
+                    key={item}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    href={`#${item.toLowerCase()}`}
+                    className="relative px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+                    style={{
+                      color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                      background: isActive ? 'var(--glow-color)' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.background = 'var(--glow-color)'; }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = isActive ? 'var(--accent-primary)' : 'var(--text-secondary)';
+                      e.currentTarget.style.background = isActive ? 'var(--glow-color)' : 'transparent';
+                    }}
+                  >
+                    {item}
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-indicator"
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full"
+                        style={{ background: 'var(--accent-primary)' }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                      />
+                    )}
+                  </motion.a>
+                );
+              })}
             </div>
 
             {/* Mobile menu button */}
@@ -344,13 +467,6 @@ export default function Portfolio() {
                   {item}
                 </a>
               ))}
-              <button
-                onClick={toggleTheme}
-                className="p-3 rounded-lg"
-                style={{ border: '1px solid var(--border-color)' }}
-              >
-                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
             </div>
           </motion.div>
         )}
@@ -360,22 +476,26 @@ export default function Portfolio() {
           HERO SECTION
           ══════════════════════════════════════════ */}
       <section id="home" className="relative min-h-screen flex items-center justify-center px-6 pt-20">
+
         <motion.div
           style={{ y: heroY, opacity: heroOpacity }}
           className="max-w-5xl mx-auto text-center relative z-10"
         >
 
-
-          {/* Name */}
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="hero-title text-6xl md:text-9xl mb-6"
-          >
-            Ansh
-            <span className="gradient-heading"> Verma</span>
-          </motion.h1>
+          {/* Name — word-by-word blur-in */}
+          <h1 className="hero-title text-6xl md:text-9xl mb-6">
+            {['Ansh', 'Verma'].map((word, i) => (
+              <motion.span
+                key={word}
+                initial={{ opacity: 0, filter: 'blur(12px)', y: 20 }}
+                animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+                transition={{ duration: 0.6, delay: 0.15 + i * 0.15, ease: 'easeOut' }}
+                className={`inline-block ${i === 1 ? 'gradient-heading ml-[0.3em]' : ''}`}
+              >
+                {word}
+              </motion.span>
+            ))}
+          </h1>
 
           {/* Typed text */}
           <motion.div
@@ -489,10 +609,10 @@ export default function Portfolio() {
             title="About Me"
           />
 
-          <div className="grid md:grid-cols-2 gap-8 items-center mb-16">
+          <div className="max-w-3xl mx-auto mb-16">
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="space-y-5"
             >
@@ -512,27 +632,6 @@ export default function Portfolio() {
                 <Download size={16} />
                 Download Resume
               </motion.button>
-            </motion.div>
-
-            {/* 3D Brain */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative h-80 md:h-96"
-            >
-              <div className="absolute inset-0 rounded-2xl overflow-hidden"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
-                <Brain3D />
-              </div>
-              <div
-                className="absolute -top-8 -right-8 w-32 h-32 rounded-full blur-[80px] opacity-20"
-                style={{ background: 'var(--accent-primary)' }}
-              />
-              <div
-                className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full blur-[80px] opacity-15"
-                style={{ background: 'var(--accent-secondary)' }}
-              />
             </motion.div>
           </div>
 
@@ -639,50 +738,53 @@ export default function Portfolio() {
 
           <div className="space-y-6">
             {projects.map((project, i) => (
-              <motion.div
+              <TiltCard
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
                 className="glow-card p-8 md:p-10"
                 style={{ borderRadius: 'var(--radius-xl)' }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' }}
-                  >
-                    <Sparkles size={22} className="text-white" />
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' }}
+                    >
+                      <Sparkles size={22} className="text-white" />
+                    </div>
+                    <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>{project.period}</span>
                   </div>
-                  <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>{project.period}</span>
-                </div>
 
-                <h3 className="text-2xl md:text-3xl font-bold mb-3">{project.title}</h3>
-                <p className="text-base leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
-                  {project.description}
-                </p>
+                  <h3 className="text-2xl md:text-3xl font-bold mb-3">{project.title}</h3>
+                  <p className="text-base leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
+                    {project.description}
+                  </p>
 
-                <div className="flex flex-wrap gap-2 mb-6">
-                  {project.tags.map((tech, j) => (
-                    <span key={j} className="pill">{tech}</span>
-                  ))}
-                </div>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {project.tags.map((tech, j) => (
+                      <span key={j} className="pill">{tech}</span>
+                    ))}
+                  </div>
 
-                <div className="flex gap-3">
-                  {project.live && (
-                    <a href={project.live} target="_blank" rel="noopener noreferrer" className="btn-accent" style={{ fontSize: '0.8rem', padding: '0.5rem 1.25rem' }}>
-                      <ExternalLink size={14} />
-                      Live Demo
-                    </a>
-                  )}
-                  {project.github && (
-                    <a href={project.github} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize: '0.8rem', padding: '0.5rem 1.25rem' }}>
-                      <Github size={14} />
-                      GitHub
-                    </a>
-                  )}
-                </div>
-              </motion.div>
+                  <div className="flex gap-3">
+                    {project.live && (
+                      <a href={project.live} target="_blank" rel="noopener noreferrer" className="btn-accent" style={{ fontSize: '0.8rem', padding: '0.5rem 1.25rem' }}>
+                        <ExternalLink size={14} />
+                        Live Demo
+                      </a>
+                    )}
+                    {project.github && (
+                      <a href={project.github} target="_blank" rel="noopener noreferrer" className="btn-ghost" style={{ fontSize: '0.8rem', padding: '0.5rem 1.25rem' }}>
+                        <Github size={14} />
+                        GitHub
+                      </a>
+                    )}
+                  </div>
+                </motion.div>
+              </TiltCard>
             ))}
           </div>
         </div>
@@ -717,33 +819,10 @@ export default function Portfolio() {
             <SkillsRadar />
           </motion.div>
 
-          {/* Skill Bars */}
+          {/* Skill Bars — animated counters */}
           <div className="grid md:grid-cols-2 gap-4 mb-12">
             {skillLevels.map((skill, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
-                className="glow-card p-4"
-                style={{ borderRadius: 'var(--radius-md)' }}
-              >
-                <div className="flex justify-between mb-2">
-                  <span className="text-sm font-semibold">{skill.name}</span>
-                  <span className="text-sm font-bold font-mono" style={{ color: 'var(--accent-primary)' }}>{skill.level}%</span>
-                </div>
-                <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
-                  <motion.div
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${skill.level}%` }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, delay: index * 0.08 }}
-                    className="h-full rounded-full"
-                    style={{ background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))' }}
-                  />
-                </div>
-              </motion.div>
+              <SkillBar key={index} skill={skill} index={index} />
             ))}
           </div>
 
@@ -902,7 +981,7 @@ export default function Portfolio() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl text-sm transition-colors"
+                  className="w-full px-4 py-3 rounded-xl text-sm transition-all input-glow"
                   style={{
                     background: 'var(--bg-secondary)',
                     border: '1px solid var(--border-color)',
@@ -918,7 +997,7 @@ export default function Portfolio() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl text-sm transition-colors"
+                  className="w-full px-4 py-3 rounded-xl text-sm transition-all input-glow"
                   style={{
                     background: 'var(--bg-secondary)',
                     border: '1px solid var(--border-color)',
@@ -934,7 +1013,7 @@ export default function Portfolio() {
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   rows="5"
-                  className="w-full px-4 py-3 rounded-xl text-sm transition-colors resize-none"
+                  className="w-full px-4 py-3 rounded-xl text-sm transition-all resize-none input-glow"
                   style={{
                     background: 'var(--bg-secondary)',
                     border: '1px solid var(--border-color)',
@@ -949,7 +1028,7 @@ export default function Portfolio() {
                 whileTap={{ scale: 0.99 }}
                 onClick={handleSubmit}
                 disabled={formStatus === 'sending'}
-                className="btn-accent w-full justify-center py-3"
+                className="btn-accent btn-shimmer w-full justify-center py-3"
               >
                 {formStatus === 'sending' ? (
                   'Sending...'
@@ -1005,22 +1084,40 @@ export default function Portfolio() {
               { href: "https://linkedin.com/in/anshverma", icon: Linkedin },
               { href: "mailto:anshverma1.work@gmail.com", icon: Mail },
             ].map(({ href, icon: Icon }, i) => (
-              <a
+              <motion.a
                 key={i}
                 href={href}
                 target={href.startsWith('mailto') ? undefined : '_blank'}
                 rel="noopener noreferrer"
                 className="transition-colors"
                 style={{ color: 'var(--text-tertiary)' }}
+                whileHover={{ scale: 1.2, rotate: 5, color: 'var(--accent-primary)' }}
+                whileTap={{ scale: 0.9 }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-tertiary)'; }}
               >
                 <Icon size={18} />
-              </a>
+              </motion.a>
             ))}
           </div>
         </div>
       </footer>
+
+      {/* Back to top */}
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="back-to-top"
+            aria-label="Back to top"
+          >
+            <ChevronUp size={20} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

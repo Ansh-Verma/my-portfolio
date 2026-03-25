@@ -7,11 +7,10 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from "recharts";
-import { useTheme } from "./ThemeContext";
+
 
 export default function SkillsRadar() {
-  const { theme } = useTheme();
-  const isDark = theme === "dark";
+  const isDark = true;
 
   const data = [
     { skill: "Machine Learning", value: 92 },

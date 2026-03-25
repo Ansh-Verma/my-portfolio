@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, ChevronDown, Terminal, Clock, Loader2, RotateCcw, Copy, Check } from 'lucide-react';
-import { useTheme } from './ThemeContext';
+
 
 const LANGUAGES = [
   { id: 'python', label: 'Python', version: '3.10.0', monacoId: 'python', icon: '🐍' },
@@ -27,7 +27,6 @@ const DEFAULT_CODE = {
 };
 
 export default function CodePlayground() {
-  const { theme } = useTheme();
   const [selectedLang, setSelectedLang] = useState(LANGUAGES[0]);
   const [code, setCode] = useState(DEFAULT_CODE.python);
   const [output, setOutput] = useState('');
@@ -277,7 +276,7 @@ export default function CodePlayground() {
                 language={selectedLang.monacoId}
                 value={code}
                 onChange={(val) => setCode(val || '')}
-                theme={theme === 'dark' ? 'vs-dark' : 'light'}
+                theme="vs-dark"
                 options={{
                   fontSize: 14,
                   fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
@@ -302,7 +301,7 @@ export default function CodePlayground() {
             </div>
 
             {/* Output Panel */}
-            <div className="flex flex-col" style={{ background: theme === 'dark' ? '#0d0d0d' : '#f7f7f7' }}>
+            <div className="flex flex-col" style={{ background: '#0d0d0d' }}>
               {/* Output header */}
               <div className="flex items-center justify-between px-4 py-2.5 border-b"
                 style={{ borderColor: 'var(--border-color)' }}>
