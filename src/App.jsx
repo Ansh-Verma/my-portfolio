@@ -1,11 +1,15 @@
+import React, { lazy, Suspense } from "react";
 import Portfolio from "./Portfolio";
-import Chatbot from "./Chatbot";
+
+const Chatbot = lazy(() => import("./Chatbot"));
 
 export default function App() {
   return (
     <>
       <Portfolio />
-      <Chatbot />
+      <Suspense fallback={null}>
+        <Chatbot />
+      </Suspense>
     </>
   );
 }

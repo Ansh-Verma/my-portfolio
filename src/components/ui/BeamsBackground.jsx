@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useMemo } from "react";
 import clsx from "clsx";
+
+const isMobile = () =>
+  typeof window !== "undefined" &&
+  (window.innerWidth < 768 || "ontouchstart" in window);
 
 function createBeam(width, height) {
   const angle = -35 + Math.random() * 10;
@@ -24,13 +27,15 @@ export function BeamsBackground({ className, intensity = "strong" }) {
   const canvasRef = useRef(null);
   const beamsRef = useRef([]);
   const animationFrameRef = useRef(0);
-  const MINIMUM_BEAMS = 20;
 
-  const opacityMap = {
-    subtle: 0.7,
-    medium: 0.85,
-    strong: 1,
-  };
+  const opacityMap = useMemo(
+    () => ({
+      subtle: 0.7,
+      medium: 0.85,
+      strong: 1,
+    }),
+    []
+  );
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -39,16 +44,20 @@ export function BeamsBackground({ className, intensity = "strong" }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const mobile = isMobile();
+    // Fewer beams on mobile for performance
+    const BEAM_COUNT = mobile ? 6 : 12;
+
     const updateCanvasSize = () => {
-      const dpr = window.devicePixelRatio || 1;
+      // Limit DPR to 1 on mobile, max 2 on desktop
+      const dpr = mobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
       ctx.scale(dpr, dpr);
 
-      const totalBeams = MINIMUM_BEAMS * 1.5;
-      beamsRef.current = Array.from({ length: totalBeams }, () =>
+      beamsRef.current = Array.from({ length: BEAM_COUNT }, () =>
         createBeam(canvas.width, canvas.height)
       );
     };
@@ -114,7 +123,8 @@ export function BeamsBackground({ className, intensity = "strong" }) {
       if (!canvas || !ctx) return;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.filter = "blur(35px)";
+      // Use canvas blur only (no additional CSS blur) — reduced from 35px
+      ctx.filter = mobile ? "blur(20px)" : "blur(30px)";
 
       const totalBeams = beamsRef.current.length;
       beamsRef.current.forEach((beam, index) => {
@@ -139,7 +149,7 @@ export function BeamsBackground({ className, intensity = "strong" }) {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [intensity]);
+  }, [intensity, opacityMap]);
 
   return (
     <div
@@ -147,27 +157,14 @@ export function BeamsBackground({ className, intensity = "strong" }) {
         "fixed inset-0 overflow-hidden pointer-events-none z-0",
         className
       )}
+      style={{ willChange: "transform" }}
     >
       <canvas
         ref={canvasRef}
         className="absolute inset-0"
-        style={{ filter: "blur(15px)" }}
+        /* No CSS filter — canvas ctx.filter handles it */
       />
-
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          opacity: [0.05, 0.15, 0.05],
-        }}
-        transition={{
-          duration: 10,
-          ease: "easeInOut",
-          repeat: Infinity,
-        }}
-        style={{
-          backdropFilter: "blur(50px)",
-        }}
-      />
+      {/* Removed the backdropFilter: blur(50px) overlay — it was the #1 perf killer */}
     </div>
   );
 }

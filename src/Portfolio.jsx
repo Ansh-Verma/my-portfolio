@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
 import {
   Menu, X, Github, Linkedin, Mail, ExternalLink, ChevronDown, ChevronUp,
   Terminal, Brain, Code, Download, Send, Award,
@@ -6,11 +6,13 @@ import {
   Calendar, GitBranch, TrendingUp, ArrowUpRight, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
-import SkillsRadar from './SkillsRadar';
 import emailjs from '@emailjs/browser';
-import CodePlayground from './CodePlayground';
 import TiltCard from './TiltCard';
 import { BeamsBackground } from './components/ui/BeamsBackground';
+
+// Lazy-load heavy components (Monaco Editor, Recharts)
+const SkillsRadar = lazy(() => import('./SkillsRadar'));
+const CodePlayground = lazy(() => import('./CodePlayground'));
 
 /* ───────────────────────────────────────────────
    DATA
@@ -109,19 +111,30 @@ function useGlowCards(containerRef) {
     const container = containerRef.current;
     if (!container) return;
 
+    // Disable on touch devices — hover glow doesn't apply
+    if ('ontouchstart' in window) return;
+
+    let rafId = null;
     const handleMouseMove = (e) => {
-      const cards = container.querySelectorAll('.glow-card');
-      cards.forEach((card) => {
-        const rect = card.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        card.style.setProperty('--mouse-x', `${x}px`);
-        card.style.setProperty('--mouse-y', `${y}px`);
+      if (rafId) return; // throttle to 1 update per animation frame
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const cards = container.querySelectorAll('.glow-card');
+        cards.forEach((card) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          card.style.setProperty('--mouse-x', `${x}px`);
+          card.style.setProperty('--mouse-y', `${y}px`);
+        });
       });
     };
 
-    container.addEventListener('mousemove', handleMouseMove);
-    return () => container.removeEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => {
+      container.removeEventListener('mousemove', handleMouseMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [containerRef]);
 }
 
@@ -177,8 +190,8 @@ function SectionHeading({ badge, title, subtitle }) {
         {words.map((word, i) => (
           <motion.span
             key={i}
-            initial={{ opacity: 0, filter: 'blur(8px)', y: 15 }}
-            whileInView={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.4, delay: i * 0.1, ease: 'easeOut' }}
             className="gradient-heading inline-block mr-[0.3em]"
@@ -380,8 +393,8 @@ export default function Portfolio() {
       {/* ══════════════════════════════════════════
           NAVIGATION
           ══════════════════════════════════════════ */}
-      <nav className="fixed top-0 w-full z-50 backdrop-blur-xl border-b"
-        style={{ background: 'color-mix(in srgb, var(--bg-primary) 80%, transparent)', borderColor: 'var(--border-color)' }}>
+      <nav className="fixed top-0 w-full z-50 border-b nav-blur"
+        style={{ background: 'color-mix(in srgb, var(--bg-primary) 85%, transparent)', borderColor: 'var(--border-color)' }}>
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex justify-between items-center">
             {/* Logo */}
@@ -487,8 +500,8 @@ export default function Portfolio() {
             {['Ansh', 'Verma'].map((word, i) => (
               <motion.span
                 key={word}
-                initial={{ opacity: 0, filter: 'blur(12px)', y: 20 }}
-                animate={{ opacity: 1, filter: 'blur(0px)', y: 0 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.15 + i * 0.15, ease: 'easeOut' }}
                 className={`inline-block ${i === 1 ? 'gradient-heading ml-[0.3em]' : ''}`}
               >
@@ -793,7 +806,9 @@ export default function Portfolio() {
       {/* ══════════════════════════════════════════
           CODE PLAYGROUND SECTION
           ══════════════════════════════════════════ */}
-      <CodePlayground />
+      <Suspense fallback={<div className="py-24 text-center" style={{ color: 'var(--text-tertiary)' }}>Loading playground...</div>}>
+        <CodePlayground />
+      </Suspense>
 
       <div className="section-divider" style={{ maxWidth: '80%', margin: '4rem auto' }} />
 
@@ -816,7 +831,9 @@ export default function Portfolio() {
             style={{ borderRadius: 'var(--radius-xl)' }}
           >
             <h3 className="text-xl font-bold mb-4 text-center">Skills Radar</h3>
-            <SkillsRadar />
+            <Suspense fallback={<div className="h-[400px] flex items-center justify-center" style={{ color: 'var(--text-tertiary)' }}>Loading chart...</div>}>
+              <SkillsRadar />
+            </Suspense>
           </motion.div>
 
           {/* Skill Bars — animated counters */}
