@@ -9,6 +9,7 @@ import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent }
 import emailjs from '@emailjs/browser';
 import TiltCard from './TiltCard';
 import { BeamsBackground } from './components/ui/BeamsBackground';
+import TextMarquee from './components/ui/TextMarquee';
 
 // Lazy-load heavy components (Monaco Editor, Recharts)
 const SkillsRadar = lazy(() => import('./SkillsRadar'));
@@ -103,6 +104,12 @@ const skillLevels = [
   { name: "Cloud Technologies", level: 80 },
 ];
 
+const ROLES = [
+  "AI Engineer",
+  "ML Researcher",
+  "Full Stack Developer",
+];
+
 /* ───────────────────────────────────────────────
    HELPER — glow card mouse tracking
    ─────────────────────────────────────────────── */
@@ -160,10 +167,73 @@ function useAnimatedCounter(target, duration = 1500, inView = false) {
   return count;
 }
 
+/* ───────────────────────────────────────────────
+   ROTATING TEXT — cycles through roles
+   ─────────────────────────────────────────────── */
+function RotatingText({ texts, interval = 3000 }) {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % texts.length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [texts, interval]);
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.span
+        key={texts[index]}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -16 }}
+        transition={{ duration: 0.4, ease: 'easeInOut' }}
+        className="gradient-heading inline-block"
+      >
+        {texts[index]}
+      </motion.span>
+    </AnimatePresence>
+  );
+}
 
 
 /* ───────────────────────────────────────────────
-   SECTION HEADING COMPONENT — word-staggered
+   MAGNETIC WRAP — subtle cursor-pull effect
+   ─────────────────────────────────────────────── */
+function MagneticWrap({ children, strength = 0.3 }) {
+  const ref = useRef(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseMove = (e) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    setPosition({
+      x: (e.clientX - cx) * strength,
+      y: (e.clientY - cy) * strength,
+    });
+  };
+
+  const handleMouseLeave = () => setPosition({ x: 0, y: 0 });
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      animate={{ x: position.x, y: position.y }}
+      transition={{ type: 'spring', stiffness: 200, damping: 15, mass: 0.2 }}
+      style={{ display: 'inline-block' }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+/* ───────────────────────────────────────────────
+   SECTION HEADING COMPONENT — blur-in staggered
    ─────────────────────────────────────────────── */
 function SectionHeading({ badge, title, subtitle }) {
   const words = title.split(' ');
@@ -180,20 +250,20 @@ function SectionHeading({ badge, title, subtitle }) {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.4 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border mb-4"
+          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border mb-6"
           style={{ borderColor: 'var(--border-color)', color: 'var(--accent-primary)' }}
         >
           {badge}
         </motion.span>
       )}
-      <h2 className="hero-title text-4xl md:text-6xl mb-4">
+      <h2 className="section-title text-4xl md:text-6xl mb-4">
         {words.map((word, i) => (
           <motion.span
             key={i}
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: i * 0.1, ease: 'easeOut' }}
+            transition={{ duration: 0.5, delay: i * 0.12, ease: 'easeOut' }}
             className="gradient-heading inline-block mr-[0.3em]"
           >
             {word}
@@ -205,7 +275,7 @@ function SectionHeading({ badge, title, subtitle }) {
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: words.length * 0.1 }}
+          transition={{ duration: 0.5, delay: words.length * 0.12 }}
           className="text-secondary max-w-2xl mx-auto text-lg"
         >
           {subtitle}
@@ -216,10 +286,7 @@ function SectionHeading({ badge, title, subtitle }) {
 }
 
 /* ───────────────────────────────────────────────
-   MAIN PORTFOLIO COMPONENT
-   ─────────────────────────────────────────────── */
-/* ───────────────────────────────────────────────
-   ANIMATED SKILL BAR — counts up percentage
+   ANIMATED SKILL BAR — shimmer fill + counter
    ─────────────────────────────────────────────── */
 function SkillBar({ skill, index }) {
   const [inView, setInView] = useState(false);
@@ -232,38 +299,38 @@ function SkillBar({ skill, index }) {
       onViewportEnter={() => setInView(true)}
       viewport={{ once: true }}
       transition={{ delay: index * 0.08 }}
-      className="glow-card p-4"
+      className="glow-card p-5"
       style={{ borderRadius: 'var(--radius-md)' }}
     >
-      <div className="flex justify-between mb-2">
+      <div className="flex justify-between mb-3">
         <span className="text-sm font-semibold">{skill.name}</span>
         <span className="text-sm font-bold font-mono" style={{ color: 'var(--accent-primary)' }}>{animatedLevel}%</span>
       </div>
-      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+      <div className="skill-bar-track">
         <motion.div
           initial={{ width: 0 }}
           whileInView={{ width: `${skill.level}%` }}
           viewport={{ once: true }}
-          transition={{ duration: 1, delay: index * 0.08 }}
-          className="h-full rounded-full"
-          style={{ background: 'linear-gradient(90deg, var(--accent-primary), var(--accent-secondary))' }}
+          transition={{ duration: 1.2, delay: index * 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="skill-bar-fill"
         />
       </div>
     </motion.div>
   );
 }
 
+/* ───────────────────────────────────────────────
+   MAIN PORTFOLIO COMPONENT
+   ─────────────────────────────────────────────── */
 export default function Portfolio() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-  const [typedText, setTypedText] = useState('');
   const [yearsOfExp, setYearsOfExp] = useState(0);
   const [activeSkillCategory, setActiveSkillCategory] = useState('languages');
   const [formStatus, setFormStatus] = useState(null); // null | 'sending' | 'sent' | 'error'
   const [activeSection, setActiveSection] = useState('home');
   const [showBackToTop, setShowBackToTop] = useState(false);
   const containerRef = useRef(null);
-  const fullText = "Building Intelligent Systems";
 
   useGlowCards(containerRef);
 
@@ -296,16 +363,6 @@ export default function Portfolio() {
     });
     return () => observer.disconnect();
   }, []);
-
-  // Typing effect
-  useEffect(() => {
-    if (typedText.length < fullText.length) {
-      const timeout = setTimeout(() => {
-        setTypedText(fullText.slice(0, typedText.length + 1));
-      }, 80);
-      return () => clearTimeout(timeout);
-    }
-  }, [typedText]);
 
   // Years of experience
   useEffect(() => {
@@ -419,7 +476,7 @@ export default function Portfolio() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     href={`#${item.toLowerCase()}`}
-                    className="relative px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+                    className="relative px-3 py-2 text-sm font-medium rounded-lg transition-colors nav-link-glow"
                     style={{
                       color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
                       background: isActive ? 'var(--glow-color)' : 'transparent',
@@ -469,16 +526,19 @@ export default function Portfolio() {
             style={{ background: 'color-mix(in srgb, var(--bg-primary) 95%, transparent)' }}
           >
             <div className="flex flex-col items-center gap-6 text-lg">
-              {navItems.map((item) => (
-                <a
+              {navItems.map((item, i) => (
+                <motion.a
                   key={item}
                   href={`#${item.toLowerCase()}`}
                   onClick={() => setIsMenuOpen(false)}
                   className="font-medium transition-colors"
                   style={{ color: 'var(--text-secondary)' }}
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.06 }}
                 >
                   {item}
-                </a>
+                </motion.a>
               ))}
             </div>
           </motion.div>
@@ -486,7 +546,7 @@ export default function Portfolio() {
       </AnimatePresence>
 
       {/* ══════════════════════════════════════════
-          HERO SECTION
+          HERO SECTION — Premium blur-in reveal
           ══════════════════════════════════════════ */}
       <section id="home" className="relative min-h-screen flex items-center justify-center px-6 pt-20">
 
@@ -495,14 +555,14 @@ export default function Portfolio() {
           className="max-w-5xl mx-auto text-center relative z-10"
         >
 
-          {/* Name — word-by-word blur-in */}
+          {/* Name — word-by-word blur-in reveal */}
           <h1 className="hero-title text-6xl md:text-9xl mb-6">
             {['Ansh', 'Verma'].map((word, i) => (
               <motion.span
                 key={word}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.15 + i * 0.15, ease: 'easeOut' }}
+                transition={{ duration: 0.7, delay: 0.2 + i * 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className={`inline-block ${i === 1 ? 'gradient-heading ml-[0.3em]' : ''}`}
               >
                 {word}
@@ -510,70 +570,76 @@ export default function Portfolio() {
             ))}
           </h1>
 
-          {/* Typed text */}
+          {/* Rotating role text */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-xl md:text-3xl mb-4 h-10 font-mono font-light"
+            transition={{ delay: 0.7 }}
+            className="text-xl md:text-3xl mb-4 h-10 font-light"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <span>{typedText}</span>
-            <span className="animate-blink" style={{ color: 'var(--accent-primary)' }}>|</span>
+            <RotatingText texts={ROLES} interval={2800} />
           </motion.div>
 
           {/* Subtitle */}
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.5 }}
             className="text-base md:text-lg mb-10 max-w-2xl mx-auto"
             style={{ color: 'var(--text-secondary)' }}
           >
-            AI Engineer · Oracle & Microsoft Certified
+            Building Intelligent Systems · Oracle & Microsoft Certified
           </motion.p>
 
-          {/* Stats */}
+          {/* Stats — staggered scale-in with glow */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.0 }}
             className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10 max-w-3xl mx-auto"
           >
             {stats.map((stat, i) => (
-              <div
+              <motion.div
                 key={i}
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 1.1 + i * 0.12, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="glow-card p-4 text-center"
                 style={{ borderRadius: 'var(--radius-lg)' }}
               >
                 <stat.icon size={18} className="mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} />
                 <div className="text-2xl font-bold">{stat.value}</div>
                 <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{stat.label}</div>
-              </div>
+              </motion.div>
             ))}
           </motion.div>
 
-          {/* CTAs */}
+          {/* CTAs — improved with glow ring */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.4 }}
             className="flex flex-wrap justify-center gap-3 mb-10"
           >
-            <a href="#projects" className="btn-accent">
-              View My Work
-              <ArrowUpRight size={16} />
-            </a>
-            <a href="#contact" className="btn-ghost">
-              Let's Connect
-            </a>
+            <MagneticWrap strength={0.25}>
+              <a href="#projects" className="btn-accent btn-shimmer">
+                View My Work
+                <ArrowUpRight size={16} />
+              </a>
+            </MagneticWrap>
+            <MagneticWrap strength={0.25}>
+              <a href="#contact" className="btn-ghost">
+                Let's Connect
+              </a>
+            </MagneticWrap>
           </motion.div>
 
           {/* Social links */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
+            transition={{ delay: 1.6 }}
             className="flex justify-center gap-3"
           >
             {[
@@ -581,19 +647,20 @@ export default function Portfolio() {
               { href: "https://linkedin.com/in/anshverma", icon: Linkedin, label: "LinkedIn" },
               { href: "mailto:anshverma1.work@gmail.com", icon: Mail, label: "Email" },
             ].map(({ href, icon: Icon, label }) => (
-              <motion.a
-                key={label}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                href={href}
-                target={href.startsWith('mailto') ? undefined : '_blank'}
-                rel="noopener noreferrer"
-                className="p-3 rounded-xl border transition-colors"
-                style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
-                aria-label={label}
-              >
-                <Icon size={20} />
-              </motion.a>
+              <MagneticWrap key={label} strength={0.35}>
+                <motion.a
+                  whileHover={{ scale: 1.1, borderColor: 'var(--accent-primary)' }}
+                  whileTap={{ scale: 0.95 }}
+                  href={href}
+                  target={href.startsWith('mailto') ? undefined : '_blank'}
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-xl border transition-colors block"
+                  style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+                  aria-label={label}
+                >
+                  <Icon size={20} />
+                </motion.a>
+              </MagneticWrap>
             ))}
           </motion.div>
         </motion.div>
@@ -609,6 +676,16 @@ export default function Portfolio() {
           <ChevronDown size={28} />
         </motion.a>
       </section>
+
+      {/* Text marquee strip */}
+      <div className="py-8 overflow-hidden">
+        <TextMarquee baseVelocity={-2}>
+          AI Engineer · Full Stack Developer · Oracle Certified · Microsoft Certified · ML Researcher ·&nbsp;
+        </TextMarquee>
+        <TextMarquee baseVelocity={2}>
+          Python · React · Node.js · scikit-learn · MongoDB · Docker · .NET · C# ·&nbsp;
+        </TextMarquee>
+      </div>
 
       <div className="section-divider" style={{ maxWidth: '80%', margin: '4rem auto' }} />
 
@@ -655,21 +732,24 @@ export default function Portfolio() {
               { title: "Intermediate", school: "St. Clare's High School", period: "2020 – 2021", grade: "79.3%" },
               { title: "High School", school: "St. Clare's High School", period: "2018 – 2019", grade: "82.5%" },
             ].map((edu, i) => (
-              <motion.div
+              <TiltCard
                 key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
                 className="glow-card p-6"
                 style={{ borderRadius: 'var(--radius-lg)' }}
               >
-                <GraduationCap size={28} className="mb-3" style={{ color: 'var(--accent-primary)' }} />
-                <h3 className="text-lg font-bold mb-1">{edu.title}</h3>
-                <p className="text-sm mb-0.5" style={{ color: 'var(--text-secondary)' }}>{edu.school}</p>
-                <p className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>{edu.period}</p>
-                <p className="text-sm font-semibold" style={{ color: 'var(--accent-primary)' }}>{edu.grade}</p>
-              </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.12, duration: 0.5 }}
+                >
+                  <GraduationCap size={28} className="mb-3" style={{ color: 'var(--accent-primary)' }} />
+                  <h3 className="text-lg font-bold mb-1">{edu.title}</h3>
+                  <p className="text-sm mb-0.5" style={{ color: 'var(--text-secondary)' }}>{edu.school}</p>
+                  <p className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>{edu.period}</p>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--accent-primary)' }}>{edu.grade}</p>
+                </motion.div>
+              </TiltCard>
             ))}
           </div>
         </div>
@@ -678,7 +758,7 @@ export default function Portfolio() {
       <div className="section-divider" style={{ maxWidth: '80%', margin: '4rem auto' }} />
 
       {/* ══════════════════════════════════════════
-          EXPERIENCE SECTION
+          EXPERIENCE SECTION — with timeline
           ══════════════════════════════════════════ */}
       <section id="experience" className="relative py-24 px-6">
         <div className="max-w-5xl mx-auto">
@@ -687,51 +767,54 @@ export default function Portfolio() {
             title="Work Experience"
           />
 
-          <div className="space-y-4">
+          <div className="timeline-container space-y-4">
             {experiences.map((exp, index) => (
-              <motion.div
+              <TiltCard
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
                 className="glow-card p-6 md:p-8"
                 style={{ borderRadius: 'var(--radius-xl)' }}
               >
-                <div className="flex flex-col md:flex-row md:items-start gap-5">
-                  {/* Icon */}
-                  <div
-                    className={`w-12 h-12 rounded-xl bg-gradient-to-br ${exp.gradient} flex items-center justify-center shrink-0`}
-                  >
-                    <Code size={22} className="text-white" />
-                  </div>
+                <motion.div
+                  initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.15, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                  <div className="flex flex-col md:flex-row md:items-start gap-5">
+                    {/* Icon */}
+                    <div
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-br ${exp.gradient} flex items-center justify-center shrink-0`}
+                    >
+                      <Code size={22} className="text-white" />
+                    </div>
 
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                      <div>
-                        <h3 className="text-xl font-bold">{exp.role}</h3>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--accent-primary)' }}>{exp.company}</p>
+                    {/* Content */}
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                        <div>
+                          <h3 className="text-xl font-bold">{exp.role}</h3>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--accent-primary)' }}>{exp.company}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
+                            <MapPin size={12} />
+                            {exp.location}
+                          </p>
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{exp.period}</p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs flex items-center gap-1" style={{ color: 'var(--text-tertiary)' }}>
-                          <MapPin size={12} />
-                          {exp.location}
-                        </p>
-                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{exp.period}</p>
+                      <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
+                        {exp.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {exp.tags.map((tag, i) => (
+                          <span key={i} className="pill">{tag}</span>
+                        ))}
                       </div>
-                    </div>
-                    <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--text-secondary)' }}>
-                      {exp.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {exp.tags.map((tag, i) => (
-                        <span key={i} className="pill">{tag}</span>
-                      ))}
                     </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              </TiltCard>
             ))}
           </div>
         </div>
@@ -760,6 +843,7 @@ export default function Portfolio() {
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
+                  transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div
@@ -778,7 +862,16 @@ export default function Portfolio() {
 
                   <div className="flex flex-wrap gap-2 mb-6">
                     {project.tags.map((tech, j) => (
-                      <span key={j} className="pill">{tech}</span>
+                      <motion.span
+                        key={j}
+                        className="pill"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3 + j * 0.04 }}
+                      >
+                        {tech}
+                      </motion.span>
                     ))}
                   </div>
 
@@ -899,40 +992,44 @@ export default function Portfolio() {
 
           <div className="grid md:grid-cols-2 gap-4 mb-12">
             {certifications.map((cert, index) => (
-              <motion.div
+              <TiltCard
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.08 }}
-                className="glow-card p-5 flex items-start gap-4"
+                className="glow-card p-5"
                 style={{ borderRadius: 'var(--radius-lg)' }}
               >
-                <div
-                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  className="flex items-start gap-4"
                 >
-                  <Award size={18} className="text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium leading-snug mb-1">{cert.name}</p>
-                  <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                    <span>{cert.issuer}</span>
-                    <span>·</span>
-                    <span>{cert.date}</span>
-                  </div>
-                  <a
-                    href={cert.verifyUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs mt-2 transition-colors"
-                    style={{ color: 'var(--accent-primary)' }}
+                  <div
+                    className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}
                   >
-                    Verify
-                    <ArrowUpRight size={12} />
-                  </a>
-                </div>
-              </motion.div>
+                    <Award size={18} className="text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium leading-snug mb-1">{cert.name}</p>
+                    <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                      <span>{cert.issuer}</span>
+                      <span>·</span>
+                      <span>{cert.date}</span>
+                    </div>
+                    <a
+                      href={cert.verifyUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs mt-2 transition-colors"
+                      style={{ color: 'var(--accent-primary)' }}
+                    >
+                      Verify
+                      <ArrowUpRight size={12} />
+                    </a>
+                  </div>
+                </motion.div>
+              </TiltCard>
             ))}
           </div>
 
@@ -974,7 +1071,7 @@ export default function Portfolio() {
       <div className="section-divider" style={{ maxWidth: '80%', margin: '4rem auto' }} />
 
       {/* ══════════════════════════════════════════
-          CONTACT SECTION
+          CONTACT SECTION — Visual upgrade
           ══════════════════════════════════════════ */}
       <section id="contact" className="relative py-24 px-6">
         <div className="max-w-3xl mx-auto">
@@ -988,56 +1085,60 @@ export default function Portfolio() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
             className="glow-card p-6 md:p-10"
             style={{ borderRadius: 'var(--radius-xl)' }}
           >
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-tertiary)' }}>Name</label>
+            <div className="space-y-6">
+              <div className="input-group">
                 <input
                   type="text"
+                  id="contact-name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl text-sm transition-all input-glow"
+                  className="w-full px-4 py-3.5 rounded-xl text-sm transition-all input-glow"
                   style={{
                     background: 'var(--bg-secondary)',
                     border: '1px solid var(--border-color)',
                     color: 'var(--text-primary)',
                   }}
-                  placeholder="Your name"
+                  placeholder=" "
                 />
+                <label htmlFor="contact-name">Name</label>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-tertiary)' }}>Email</label>
+              <div className="input-group">
                 <input
                   type="email"
+                  id="contact-email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl text-sm transition-all input-glow"
+                  className="w-full px-4 py-3.5 rounded-xl text-sm transition-all input-glow"
                   style={{
                     background: 'var(--bg-secondary)',
                     border: '1px solid var(--border-color)',
                     color: 'var(--text-primary)',
                   }}
-                  placeholder="your.email@example.com"
+                  placeholder=" "
                 />
+                <label htmlFor="contact-email">Email</label>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold mb-2" style={{ color: 'var(--text-tertiary)' }}>Message</label>
+              <div className="input-group">
                 <textarea
+                  id="contact-message"
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   rows="5"
-                  className="w-full px-4 py-3 rounded-xl text-sm transition-all resize-none input-glow"
+                  className="w-full px-4 py-3.5 rounded-xl text-sm transition-all resize-none input-glow"
                   style={{
                     background: 'var(--bg-secondary)',
                     border: '1px solid var(--border-color)',
                     color: 'var(--text-primary)',
                   }}
-                  placeholder="Your message..."
+                  placeholder=" "
                 />
+                <label htmlFor="contact-message">Message</label>
               </div>
 
               <motion.button
@@ -1045,7 +1146,7 @@ export default function Portfolio() {
                 whileTap={{ scale: 0.99 }}
                 onClick={handleSubmit}
                 disabled={formStatus === 'sending'}
-                className="btn-accent btn-shimmer w-full justify-center py-3"
+                className="btn-accent btn-shimmer w-full justify-center py-3.5 text-base"
               >
                 {formStatus === 'sending' ? (
                   'Sending...'
@@ -1072,15 +1173,22 @@ export default function Portfolio() {
             ].map(({ href, icon: Icon, text, color }, i) => {
               const Tag = href ? 'a' : 'div';
               return (
-                <Tag
+                <motion.div
                   key={i}
-                  href={href || undefined}
-                  className="glow-card p-4 text-center block"
-                  style={{ borderRadius: 'var(--radius-lg)' }}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.1 + i * 0.1 }}
                 >
-                  <Icon size={20} className="mx-auto mb-2" style={{ color }} />
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{text}</p>
-                </Tag>
+                  <Tag
+                    href={href || undefined}
+                    className="glow-card p-4 text-center block"
+                    style={{ borderRadius: 'var(--radius-lg)' }}
+                  >
+                    <Icon size={20} className="mx-auto mb-2" style={{ color }} />
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{text}</p>
+                  </Tag>
+                </motion.div>
               );
             })}
           </div>
@@ -1088,34 +1196,42 @@ export default function Portfolio() {
       </section>
 
       {/* ══════════════════════════════════════════
-          FOOTER
+          FOOTER — with personality
           ══════════════════════════════════════════ */}
-      <footer className="py-10 px-6 border-t" style={{ borderColor: 'var(--border-color)' }}>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-            © 2026 Ansh Verma. Crafted with passion and code.
-          </p>
-          <div className="flex gap-4">
-            {[
-              { href: "https://github.com/Ansh-Verma", icon: Github },
-              { href: "https://linkedin.com/in/anshverma", icon: Linkedin },
-              { href: "mailto:anshverma1.work@gmail.com", icon: Mail },
-            ].map(({ href, icon: Icon }, i) => (
-              <motion.a
-                key={i}
-                href={href}
-                target={href.startsWith('mailto') ? undefined : '_blank'}
-                rel="noopener noreferrer"
-                className="transition-colors"
-                style={{ color: 'var(--text-tertiary)' }}
-                whileHover={{ scale: 1.2, rotate: 5, color: 'var(--accent-primary)' }}
-                whileTap={{ scale: 0.9 }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent-primary)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-tertiary)'; }}
-              >
-                <Icon size={18} />
-              </motion.a>
-            ))}
+      <div className="section-divider" style={{ maxWidth: '100%', margin: '0 auto' }} />
+      <footer className="py-12 px-6" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <p className="text-sm font-medium mb-1 footer-gradient-text">
+                Designed & Built by Ansh Verma
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                © {new Date().getFullYear()} · Crafted with passion, React, and too much coffee ☕
+              </p>
+            </div>
+            <div className="flex gap-4">
+              {[
+                { href: "https://github.com/Ansh-Verma", icon: Github },
+                { href: "https://linkedin.com/in/anshverma", icon: Linkedin },
+                { href: "mailto:anshverma1.work@gmail.com", icon: Mail },
+              ].map(({ href, icon: Icon }, i) => (
+                <motion.a
+                  key={i}
+                  href={href}
+                  target={href.startsWith('mailto') ? undefined : '_blank'}
+                  rel="noopener noreferrer"
+                  className="p-2.5 rounded-lg border transition-all"
+                  style={{ borderColor: 'var(--border-color)', color: 'var(--text-tertiary)' }}
+                  whileHover={{ scale: 1.1, borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+                  whileTap={{ scale: 0.9 }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent-primary)'; e.currentTarget.style.borderColor = 'var(--accent-primary)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                >
+                  <Icon size={18} />
+                </motion.a>
+              ))}
+            </div>
           </div>
         </div>
       </footer>

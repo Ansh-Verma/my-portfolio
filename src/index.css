@@ -154,6 +154,41 @@ body {
   z-index: 1;
 }
 
+/* Gradient border card — subtle prismatic edge */
+.gradient-border-card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gradient-border-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(245, 158, 11, 0.15),
+    rgba(96, 165, 250, 0.1),
+    rgba(245, 158, 11, 0.05)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.gradient-border-card:hover::before {
+  opacity: 1;
+}
+
 /* ═══════════════════════════════════════
    TYPOGRAPHY
    ═══════════════════════════════════════ */
@@ -186,6 +221,13 @@ body {
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 0.95;
+}
+
+/* Section heading — refined */
+.section-title {
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
 }
 
 /* ═══════════════════════════════════════
@@ -280,7 +322,7 @@ button, a, input, textarea, select {
   color: var(--accent-primary);
 }
 
-/* Accent button */
+/* Accent button — with glow ring */
 .btn-accent {
   display: inline-flex;
   align-items: center;
@@ -293,12 +335,21 @@ button, a, input, textarea, select {
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
 }
 
 .btn-accent:hover {
   filter: brightness(1.1);
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+  box-shadow:
+    0 0 20px rgba(245, 158, 11, 0.3),
+    0 0 0 4px rgba(245, 158, 11, 0.12);
+  transform: translateY(-1px);
+}
+
+.btn-accent:active {
+  transform: translateY(0);
 }
 
 /* Ghost button */
@@ -314,13 +365,19 @@ button, a, input, textarea, select {
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-ghost:hover {
   border-color: var(--accent-primary);
   color: var(--accent-primary);
   background: var(--glow-color);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.btn-ghost:active {
+  transform: translateY(0);
 }
 
 /* ═══════════════════════════════════════
@@ -367,19 +424,16 @@ button, a, input, textarea, select {
   100% { transform: translateX(100%); }
 }
 
+/* blur-in removed — filter:blur animations cause GPU rasterization jank */
 
+/* — Heading underline grow — */
+@keyframes underline-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
 
 .animate-blink { animation: blink 1s infinite; }
-.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
 .animate-float { animation: float 6s ease-in-out infinite; }
-.animate-shimmer {
-  background-size: 200% 100%;
-  animation: shimmer 2s linear infinite;
-}
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 4s ease infinite;
-}
 .animate-spin-slow { animation: spin-slow 20s linear infinite; }
 
 /* ═══════════════════════════════════════
@@ -396,6 +450,25 @@ button, a, input, textarea, select {
     -webkit-backdrop-filter: none;
     background: var(--bg-primary) !important;
   }
+}
+
+/* Nav link hover glow */
+.nav-link-glow {
+  position: relative;
+}
+.nav-link-glow::before {
+  content: '';
+  position: absolute;
+  inset: -4px -8px;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at center, var(--glow-color) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+.nav-link-glow:hover::before {
+  opacity: 1;
 }
 
 /* ═══════════════════════════════════════
@@ -415,10 +488,51 @@ button, a, input, textarea, select {
 /* ═══════════════════════════════════════
    GLOW FOCUS FOR INPUTS
    ═══════════════════════════════════════ */
+.input-glow {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
 .input-glow:focus {
   border-color: var(--accent-primary) !important;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15), 0 0 20px rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15), 0 0 20px rgba(245, 158, 11, 0.08);
+  background: rgba(20, 20, 20, 0.9) !important;
   outline: none;
+}
+
+/* Floating label group */
+.input-group {
+  position: relative;
+}
+
+.input-group label {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-group textarea ~ label {
+  top: 1rem;
+  transform: none;
+}
+
+.input-group input:focus ~ label,
+.input-group input:not(:placeholder-shown) ~ label,
+.input-group textarea:focus ~ label,
+.input-group textarea:not(:placeholder-shown) ~ label {
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  background: var(--bg-primary);
+  padding: 0 0.25rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 /* ═══════════════════════════════════════
@@ -442,8 +556,12 @@ button, a, input, textarea, select {
     rgba(255, 255, 255, 0.25) 55%,
     transparent 65%
   );
-  animation: shimmer-travel 3s ease-in-out infinite;
+  transform: translateX(-100%);
   pointer-events: none;
+  transition: none;
+}
+.btn-shimmer:hover::after {
+  animation: shimmer-travel 1s ease-out forwards;
 }
 
 /* ═══════════════════════════════════════
@@ -471,8 +589,6 @@ button, a, input, textarea, select {
   transform: translateY(-3px);
   box-shadow: 0 6px 30px rgba(245, 158, 11, 0.4);
 }
-
-
 
 /* ═══════════════════════════════════════
    NOISE TEXTURE OVERLAY (dark mode)
@@ -515,5 +631,115 @@ button, a, input, textarea, select {
     var(--border-color) 80%,
     transparent
   );
+  opacity: 0.6;
   margin: 4rem 0;
+}
+
+/* ═══════════════════════════════════════
+   EXPERIENCE TIMELINE
+   ═══════════════════════════════════════ */
+.timeline-container {
+  position: relative;
+}
+
+/* Vertical connector line — desktop only */
+@media (min-width: 769px) {
+  .timeline-container::before {
+    content: '';
+    position: absolute;
+    left: 29px;
+    top: 24px;
+    bottom: 24px;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      var(--border-glow) 10%,
+      var(--accent-primary) 50%,
+      var(--border-glow) 90%,
+      transparent
+    );
+    opacity: 0.4;
+    border-radius: 1px;
+  }
+}
+
+.timeline-dot {
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+/* ═══════════════════════════════════════
+   SKILL BAR ENHANCED
+   ═══════════════════════════════════════ */
+.skill-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-secondary);
+  overflow: hidden;
+  position: relative;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  position: relative;
+}
+
+/* Static subtle highlight on the fill — no infinite animation */
+.skill-bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255,255,255,0.1) 50%,
+    transparent 100%
+  );
+}
+
+/* ═══════════════════════════════════════
+   HEADING UNDERLINE
+   ═══════════════════════════════════════ */
+.heading-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.heading-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* ═══════════════════════════════════════
+   FOOTER ENHANCED
+   ═══════════════════════════════════════ */
+.footer-gradient-text {
+  background: linear-gradient(135deg, var(--text-tertiary), var(--accent-primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }

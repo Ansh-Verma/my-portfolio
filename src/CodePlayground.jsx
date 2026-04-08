@@ -295,6 +295,7 @@ export default function CodePlayground() {
                     horizontal: 'auto',
                     verticalScrollbarSize: 6,
                     horizontalScrollbarSize: 6,
+                    alwaysConsumeMouseWheel: false,
                   },
                 }}
               />
