@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
 /**
@@ -7,7 +7,6 @@ import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
  * The outer div provides perspective; the inner motion.div handles rotation.
  */
 export default function TiltCard({ children, className = '', style = {}, ...rest }) {
-  const [isHovered, setIsHovered] = useState(false);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
@@ -26,7 +25,6 @@ export default function TiltCard({ children, className = '', style = {}, ...rest
   };
 
   const handleMouseLeave = () => {
-    setIsHovered(false);
     x.set(0);
     y.set(0);
   };
@@ -43,7 +41,6 @@ export default function TiltCard({ children, className = '', style = {}, ...rest
           ...style,
         }}
         onMouseMove={handleMouseMove}
-        onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={handleMouseLeave}
         whileHover={{ scale: 1.015 }}
         transition={{ scale: { duration: 0.3 } }}

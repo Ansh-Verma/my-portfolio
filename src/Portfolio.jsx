@@ -5,7 +5,7 @@ import {
   GraduationCap, Trophy, Users, MapPin, Phone,
   Calendar, GitBranch, TrendingUp, ArrowUpRight, Sparkles
 } from 'lucide-react';
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, useMotionValue as useMV, useSpring as useSP } from 'framer-motion';
 import emailjs from '@emailjs/browser';
 import TiltCard from './TiltCard';
 import { BeamsBackground } from './components/ui/BeamsBackground';
@@ -202,7 +202,10 @@ function RotatingText({ texts, interval = 3000 }) {
    ─────────────────────────────────────────────── */
 function MagneticWrap({ children, strength = 0.3 }) {
   const ref = useRef(null);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const mx = useMV(0);
+  const my = useMV(0);
+  const springX = useSP(mx, { stiffness: 200, damping: 15, mass: 0.2 });
+  const springY = useSP(my, { stiffness: 200, damping: 15, mass: 0.2 });
 
   const handleMouseMove = (e) => {
     const el = ref.current;
@@ -210,22 +213,18 @@ function MagneticWrap({ children, strength = 0.3 }) {
     const rect = el.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    setPosition({
-      x: (e.clientX - cx) * strength,
-      y: (e.clientY - cy) * strength,
-    });
+    mx.set((e.clientX - cx) * strength);
+    my.set((e.clientY - cy) * strength);
   };
 
-  const handleMouseLeave = () => setPosition({ x: 0, y: 0 });
+  const handleMouseLeave = () => { mx.set(0); my.set(0); };
 
   return (
     <motion.div
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      animate={{ x: position.x, y: position.y }}
-      transition={{ type: 'spring', stiffness: 200, damping: 15, mass: 0.2 }}
-      style={{ display: 'inline-block' }}
+      style={{ display: 'inline-block', x: springX, y: springY }}
     >
       {children}
     </motion.div>
@@ -325,6 +324,7 @@ function SkillBar({ skill, index }) {
 export default function Portfolio() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [formErrors, setFormErrors] = useState({});
   const [yearsOfExp, setYearsOfExp] = useState(0);
   const [activeSkillCategory, setActiveSkillCategory] = useState('languages');
   const [formStatus, setFormStatus] = useState(null); // null | 'sending' | 'sent' | 'error'
@@ -334,16 +334,31 @@ export default function Portfolio() {
 
   useGlowCards(containerRef);
 
-  // Parallax for hero
+  // Scroll progress bar
   const { scrollY, scrollYProgress } = useScroll();
-  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
   const scaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
 
   // Active section tracking + back-to-top
   useMotionValueEvent(scrollY, 'change', (latest) => {
     setShowBackToTop(latest > 500);
   });
+
+  // Lock body scroll when mobile menu is open + Escape to close
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      const handleEscape = (e) => {
+        if (e.key === 'Escape') setIsMenuOpen(false);
+      };
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', handleEscape);
+      };
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isMenuOpen]);
 
   useEffect(() => {
     const sectionIds = ['home', 'about', 'experience', 'projects', 'playground', 'skills', 'contact'];
@@ -375,22 +390,36 @@ export default function Portfolio() {
   const stats = [
     { label: "Years Exp.", value: yearsOfExp, icon: Calendar },
     { label: "GitHub Repos", value: "3", icon: GitBranch },
-    { label: "Certifications", value: "4", icon: Award },
+    { label: "Certifications", value: String(certifications.length), icon: Award },
     { label: "Projects", value: "4+", icon: TrendingUp },
   ];
 
-  const handleSubmit = async () => {
-    if (!formData.name || !formData.email || !formData.message) {
-      alert('Please fill in all fields');
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
+
+    // Inline validation
+    const errors = {};
+    if (!formData.name.trim()) errors.name = 'Name is required';
+    if (!formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email';
+    }
+    if (!formData.message.trim()) errors.message = 'Message is required';
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
+    setFormErrors({});
 
     const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
     const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
     const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
     if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
-      alert('Service not configured properly.');
+      setFormStatus('error');
+      setTimeout(() => setFormStatus(null), 3000);
       return;
     }
 
@@ -412,19 +441,21 @@ export default function Portfolio() {
     }
   };
 
-  const downloadResume = () => {
-    const link = document.createElement('a');
-    link.href = '/Ansh_Verma_Resume.pdf';
-    link.download = 'Ansh_Verma_Resume.pdf';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // Resume download handled via native <a download> in About section
 
   const navItems = ['Home', 'About', 'Experience', 'Projects', 'Playground', 'Skills', 'Contact'];
 
   return (
     <div ref={containerRef} className="min-h-screen relative" style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
+
+      {/* Skip to content — accessibility */}
+      <a
+        href="#home"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-medium"
+        style={{ background: 'var(--accent-primary)', color: '#0a0a0a' }}
+      >
+        Skip to content
+      </a>
 
       {/* Global animated beams background */}
       <BeamsBackground intensity="medium" />
@@ -550,8 +581,7 @@ export default function Portfolio() {
           ══════════════════════════════════════════ */}
       <section id="home" className="relative min-h-screen flex items-center justify-center px-6 pt-20">
 
-        <motion.div
-          style={{ y: heroY, opacity: heroOpacity }}
+        <div
           className="max-w-5xl mx-auto text-center relative z-10"
         >
 
@@ -663,7 +693,7 @@ export default function Portfolio() {
               </MagneticWrap>
             ))}
           </motion.div>
-        </motion.div>
+        </div>
 
         {/* Scroll indicator */}
         <motion.a
@@ -713,15 +743,16 @@ export default function Portfolio() {
                 My expertise spans from developing AI agents to creating AI-powered proctoring systems. I'm certified by <strong style={{ color: 'var(--text-primary)' }}>Oracle</strong> and <strong style={{ color: 'var(--text-primary)' }}>Microsoft</strong> in AI and cloud technologies.
               </p>
 
-              <motion.button
+              <motion.a
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={downloadResume}
+                href="/Ansh_Verma_Resume.pdf"
+                download="Ansh_Verma_Resume.pdf"
                 className="btn-ghost mt-2"
               >
                 <Download size={16} />
                 Download Resume
-              </motion.button>
+              </motion.a>
             </motion.div>
           </div>
 
@@ -899,9 +930,11 @@ export default function Portfolio() {
       {/* ══════════════════════════════════════════
           CODE PLAYGROUND SECTION
           ══════════════════════════════════════════ */}
-      <Suspense fallback={<div className="py-24 text-center" style={{ color: 'var(--text-tertiary)' }}>Loading playground...</div>}>
-        <CodePlayground />
-      </Suspense>
+      <section id="playground">
+        <Suspense fallback={<div className="py-24 text-center" style={{ color: 'var(--text-tertiary)' }}>Loading playground...</div>}>
+          <CodePlayground />
+        </Suspense>
+      </section>
 
       <div className="section-divider" style={{ maxWidth: '80%', margin: '4rem auto' }} />
 
@@ -1089,22 +1122,25 @@ export default function Portfolio() {
             className="glow-card p-6 md:p-10"
             style={{ borderRadius: 'var(--radius-xl)' }}
           >
-            <div className="space-y-6">
+            <form onSubmit={handleSubmit} noValidate className="space-y-6">
               <div className="input-group">
                 <input
                   type="text"
                   id="contact-name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, name: e.target.value }); if (formErrors.name) setFormErrors((prev) => ({ ...prev, name: '' })); }}
                   className="w-full px-4 py-3.5 rounded-xl text-sm transition-all input-glow"
                   style={{
                     background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-color)',
+                    border: `1px solid ${formErrors.name ? 'var(--accent-danger)' : 'var(--border-color)'}`,
                     color: 'var(--text-primary)',
                   }}
                   placeholder=" "
+                  aria-invalid={!!formErrors.name}
+                  aria-describedby={formErrors.name ? 'name-error' : undefined}
                 />
                 <label htmlFor="contact-name">Name</label>
+                {formErrors.name && <p id="name-error" className="text-xs mt-1" style={{ color: 'var(--accent-danger)' }}>{formErrors.name}</p>}
               </div>
 
               <div className="input-group">
@@ -1112,41 +1148,52 @@ export default function Portfolio() {
                   type="email"
                   id="contact-email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, email: e.target.value }); if (formErrors.email) setFormErrors((prev) => ({ ...prev, email: '' })); }}
                   className="w-full px-4 py-3.5 rounded-xl text-sm transition-all input-glow"
                   style={{
                     background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-color)',
+                    border: `1px solid ${formErrors.email ? 'var(--accent-danger)' : 'var(--border-color)'}`,
                     color: 'var(--text-primary)',
                   }}
                   placeholder=" "
+                  aria-invalid={!!formErrors.email}
+                  aria-describedby={formErrors.email ? 'email-error' : undefined}
                 />
                 <label htmlFor="contact-email">Email</label>
+                {formErrors.email && <p id="email-error" className="text-xs mt-1" style={{ color: 'var(--accent-danger)' }}>{formErrors.email}</p>}
               </div>
 
               <div className="input-group">
                 <textarea
                   id="contact-message"
                   value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, message: e.target.value }); if (formErrors.message) setFormErrors((prev) => ({ ...prev, message: '' })); }}
                   rows="5"
                   className="w-full px-4 py-3.5 rounded-xl text-sm transition-all resize-none input-glow"
                   style={{
                     background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-color)',
+                    border: `1px solid ${formErrors.message ? 'var(--accent-danger)' : 'var(--border-color)'}`,
                     color: 'var(--text-primary)',
                   }}
                   placeholder=" "
+                  aria-invalid={!!formErrors.message}
+                  aria-describedby={formErrors.message ? 'message-error' : undefined}
                 />
                 <label htmlFor="contact-message">Message</label>
+                {formErrors.message && <p id="message-error" className="text-xs mt-1" style={{ color: 'var(--accent-danger)' }}>{formErrors.message}</p>}
               </div>
 
               <motion.button
+                type="submit"
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                onClick={handleSubmit}
                 disabled={formStatus === 'sending'}
                 className="btn-accent btn-shimmer w-full justify-center py-3.5 text-base"
+                style={
+                  formStatus === 'error' ? { background: '#ef4444', borderColor: '#ef4444' } :
+                  formStatus === 'sent' ? { background: '#22c55e', borderColor: '#22c55e' } :
+                  {}
+                }
               >
                 {formStatus === 'sending' ? (
                   'Sending...'
@@ -1161,16 +1208,16 @@ export default function Portfolio() {
                   </>
                 )}
               </motion.button>
-            </div>
+            </form>
           </motion.div>
 
           {/* Contact cards */}
           <div className="grid grid-cols-3 gap-3 mt-8">
             {[
-              { href: "mailto:anshverma1.work@gmail.com", icon: Mail, text: "Email", color: 'var(--accent-primary)' },
-              { href: "tel:+916398775442", icon: Phone, text: "Phone", color: 'var(--accent-secondary)' },
-              { href: null, icon: MapPin, text: "Agra, UP", color: 'var(--accent-success)' },
-            ].map(({ href, icon: Icon, text, color }, i) => {
+              { href: "mailto:anshverma1.work@gmail.com", icon: Mail, text: "Email", ariaLabel: "Email anshverma1.work@gmail.com", color: 'var(--accent-primary)' },
+              { href: "tel:+916398775442", icon: Phone, text: "+91 63987 75442", ariaLabel: "Call Ansh Verma", color: 'var(--accent-secondary)' },
+              { href: null, icon: MapPin, text: "Agra, UP", ariaLabel: "Location: Agra, Uttar Pradesh", color: 'var(--accent-success)' },
+            ].map(({ href, icon: Icon, text, ariaLabel, color }, i) => {
               const Tag = href ? 'a' : 'div';
               return (
                 <motion.div
@@ -1184,6 +1231,7 @@ export default function Portfolio() {
                     href={href || undefined}
                     className="glow-card p-4 text-center block"
                     style={{ borderRadius: 'var(--radius-lg)' }}
+                    aria-label={ariaLabel}
                   >
                     <Icon size={20} className="mx-auto mb-2" style={{ color }} />
                     <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{text}</p>

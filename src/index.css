@@ -743,3 +743,15 @@ button, a, input, textarea, select {
   background-clip: text;
   color: transparent;
 }
+
+/* ═══════════════════════════════════════
+   CHATBOT — error message pulse
+   ═══════════════════════════════════════ */
+.chat-error-pulse {
+  animation: chat-error-flash 0.6s ease-out;
+}
+
+@keyframes chat-error-flash {
+  0% { border-color: var(--accent-danger); box-shadow: 0 0 12px rgba(248, 113, 113, 0.2); }
+  100% { border-color: var(--accent-danger); box-shadow: none; }
+}

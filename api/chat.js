@@ -281,14 +281,30 @@ ${RESUME_SUMMARY}
       ]
     };
 
-    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${key}`
-      },
-      body: JSON.stringify(payload)
-    });
+    // Abort if Groq takes longer than 15 seconds
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15_000);
+
+    let groqRes;
+    try {
+      groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${key}`
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+    } catch (fetchErr) {
+      clearTimeout(timeout);
+      if (fetchErr.name === 'AbortError') {
+        console.error('Groq API timed out after 15s');
+        return res.status(200).json({ reply: "The request timed out. Please try again in a moment.", source: 'error' });
+      }
+      throw fetchErr; // re-throw to outer catch
+    }
+    clearTimeout(timeout);
 
     if (!groqRes.ok) {
       const errText = await groqRes.text().catch(() => '<no body>');
