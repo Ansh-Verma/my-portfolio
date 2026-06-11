@@ -8,6 +8,7 @@ import {
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, useMotionValue as useMV, useSpring as useSP } from 'framer-motion';
 import emailjs from '@emailjs/browser';
 import TiltCard from './TiltCard';
+import SpotlightCard from './components/ui/SpotlightCard';
 import { BeamsBackground } from './components/ui/BeamsBackground';
 import TextMarquee from './components/ui/TextMarquee';
 
@@ -319,6 +320,39 @@ function SkillBar({ skill, index }) {
 }
 
 /* ───────────────────────────────────────────────
+   HERO STAT — animated counter for stats grid
+   ─────────────────────────────────────────────── */
+function HeroStat({ stat, index }) {
+  const [inView, setInView] = useState(false);
+  // Parse only pure numbers for animation
+  const numericValue = parseFloat(stat.value);
+  const isAnimatable = !isNaN(numericValue) && /^[\d.]+$/.test(String(stat.value).replace('+', ''));
+  const suffix = String(stat.value).includes('+') ? '+' : '';
+  const animatedValue = useAnimatedCounter(
+    isAnimatable ? numericValue : 0,
+    1400,
+    inView
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      onViewportEnter={() => setInView(true)}
+      transition={{ delay: 1.1 + index * 0.12, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className="glow-card p-4 text-center"
+      style={{ borderRadius: 'var(--radius-lg)' }}
+    >
+      <stat.icon size={18} className="mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} />
+      <div className="text-2xl font-bold font-mono">
+        {isAnimatable ? `${animatedValue}${suffix}` : stat.value}
+      </div>
+      <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{stat.label}</div>
+    </motion.div>
+  );
+}
+
+/* ───────────────────────────────────────────────
    MAIN PORTFOLIO COMPONENT
    ─────────────────────────────────────────────── */
 export default function Portfolio() {
@@ -622,7 +656,7 @@ export default function Portfolio() {
             Building Intelligent Systems · Oracle & Microsoft Certified
           </motion.p>
 
-          {/* Stats — staggered scale-in with glow */}
+          {/* Stats — staggered scale-in with glow + animated counters */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -630,18 +664,7 @@ export default function Portfolio() {
             className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10 max-w-3xl mx-auto"
           >
             {stats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ delay: 1.1 + i * 0.12, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-                className="glow-card p-4 text-center"
-                style={{ borderRadius: 'var(--radius-lg)' }}
-              >
-                <stat.icon size={18} className="mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} />
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <div className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{stat.label}</div>
-              </motion.div>
+              <HeroStat key={i} stat={stat} index={i} />
             ))}
           </motion.div>
 
@@ -759,13 +782,13 @@ export default function Portfolio() {
           {/* Education - Bento Grid */}
           <div className="bento-grid-3">
             {[
-              { title: "B.Tech CSE", school: "GLA University", period: "2021 – 2025", grade: "CPI: 6.91 / 10.0" },
-              { title: "Intermediate", school: "St. Clare's High School", period: "2020 – 2021", grade: "79.3%" },
-              { title: "High School", school: "St. Clare's High School", period: "2018 – 2019", grade: "82.5%" },
+              { title: "B.Tech CSE", school: "GLA University", period: "2021 – 2025" },
+              { title: "Intermediate", school: "St. Clare's High School", period: "2020 – 2021" },
+              { title: "High School", school: "St. Clare's High School", period: "2018 – 2019" },
             ].map((edu, i) => (
               <TiltCard
                 key={i}
-                className="glow-card p-6"
+                className="glow-card edu-card p-6"
                 style={{ borderRadius: 'var(--radius-lg)' }}
               >
                 <motion.div
@@ -777,8 +800,7 @@ export default function Portfolio() {
                   <GraduationCap size={28} className="mb-3" style={{ color: 'var(--accent-primary)' }} />
                   <h3 className="text-lg font-bold mb-1">{edu.title}</h3>
                   <p className="text-sm mb-0.5" style={{ color: 'var(--text-secondary)' }}>{edu.school}</p>
-                  <p className="text-xs mb-2" style={{ color: 'var(--text-tertiary)' }}>{edu.period}</p>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--accent-primary)' }}>{edu.grade}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>{edu.period}</p>
                 </motion.div>
               </TiltCard>
             ))}
@@ -865,9 +887,10 @@ export default function Portfolio() {
 
           <div className="space-y-6">
             {projects.map((project, i) => (
-              <TiltCard
+              <SpotlightCard
                 key={i}
-                className="glow-card p-8 md:p-10"
+                spotlightColor="rgba(245, 158, 11, 0.15)"
+                className="p-8 md:p-10"
                 style={{ borderRadius: 'var(--radius-xl)' }}
               >
                 <motion.div
@@ -921,20 +944,20 @@ export default function Portfolio() {
                     )}
                   </div>
                 </motion.div>
-              </TiltCard>
+              </SpotlightCard>
             ))}
           </div>
         </div>
       </section>
 
+      <div className="section-divider" style={{ maxWidth: '80%', margin: '4rem auto' }} />
+
       {/* ══════════════════════════════════════════
           CODE PLAYGROUND SECTION
           ══════════════════════════════════════════ */}
-      <section id="playground">
-        <Suspense fallback={<div className="py-24 text-center" style={{ color: 'var(--text-tertiary)' }}>Loading playground...</div>}>
-          <CodePlayground />
-        </Suspense>
-      </section>
+      <Suspense fallback={<div className="py-24 text-center" style={{ color: 'var(--text-tertiary)' }}>Loading playground...</div>}>
+        <CodePlayground />
+      </Suspense>
 
       <div className="section-divider" style={{ maxWidth: '80%', margin: '4rem auto' }} />
 
@@ -1229,7 +1252,7 @@ export default function Portfolio() {
                 >
                   <Tag
                     href={href || undefined}
-                    className="glow-card p-4 text-center block"
+                    className="glow-card contact-glow-card p-4 text-center block"
                     style={{ borderRadius: 'var(--radius-lg)' }}
                     aria-label={ariaLabel}
                   >
@@ -1260,10 +1283,10 @@ export default function Portfolio() {
             </div>
             <div className="flex gap-4">
               {[
-                { href: "https://github.com/Ansh-Verma", icon: Github },
-                { href: "https://linkedin.com/in/anshverma", icon: Linkedin },
-                { href: "mailto:anshverma1.work@gmail.com", icon: Mail },
-              ].map(({ href, icon: Icon }, i) => (
+                { href: "https://github.com/Ansh-Verma", icon: Github, label: "GitHub" },
+                { href: "https://linkedin.com/in/anshverma", icon: Linkedin, label: "LinkedIn" },
+                { href: "mailto:anshverma1.work@gmail.com", icon: Mail, label: "Email" },
+              ].map(({ href, icon: Icon, label }, i) => (
                 <motion.a
                   key={i}
                   href={href}
@@ -1275,6 +1298,7 @@ export default function Portfolio() {
                   whileTap={{ scale: 0.9 }}
                   onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--accent-primary)'; e.currentTarget.style.borderColor = 'var(--accent-primary)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                  aria-label={label}
                 >
                   <Icon size={18} />
                 </motion.a>

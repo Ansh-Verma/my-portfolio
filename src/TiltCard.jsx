@@ -1,12 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 
 /**
  * TiltCard — a 3D perspective tilt wrapper.
  * Wraps any children with a noticeable 3D tilt-to-cursor effect on hover.
- * The outer div provides perspective; the inner motion.div handles rotation.
+ * Disabled on mobile/touch devices to prevent scroll jank.
  */
 export default function TiltCard({ children, className = '', style = {}, ...rest }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window);
+  }, []);
+
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
@@ -17,6 +23,7 @@ export default function TiltCard({ children, className = '', style = {}, ...rest
   const rotateY = useTransform(xSpring, [-0.5, 0.5], ['-8deg', '8deg']);
 
   const handleMouseMove = (e) => {
+    if (isMobile) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const px = (e.clientX - rect.left) / rect.width - 0.5;
     const py = (e.clientY - rect.top) / rect.height - 0.5;
@@ -28,6 +35,15 @@ export default function TiltCard({ children, className = '', style = {}, ...rest
     x.set(0);
     y.set(0);
   };
+
+  // On mobile, render a simple div — no 3D transforms or willChange
+  if (isMobile) {
+    return (
+      <div className={className} style={style} {...rest}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div style={{ perspective: '800px' }}>
