@@ -11,7 +11,7 @@ const RESUME_DATA = {
     "Expertise spans from developing AI agents to creating AI-powered proctoring systems. Certified by Oracle and Microsoft in AI and cloud technologies."
   ],
   contact: {
-    email: 'anshverma1.work@gmail.com',
+    email: 'droptoansh@gmail.com',
     phone: '+91 6398775442',
     linkedin: 'https://linkedin.com/in/anshverma',
     github: 'https://github.com/Ansh-Verma',

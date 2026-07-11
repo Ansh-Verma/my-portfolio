@@ -698,7 +698,7 @@ export default function Portfolio() {
             {[
               { href: "https://github.com/Ansh-Verma", icon: Github, label: "GitHub" },
               { href: "https://linkedin.com/in/anshverma", icon: Linkedin, label: "LinkedIn" },
-              { href: "mailto:anshverma1.work@gmail.com", icon: Mail, label: "Email" },
+              { href: "mailto:droptoansh@gmail.com", icon: Mail, label: "Email" },
             ].map(({ href, icon: Icon, label }) => (
               <MagneticWrap key={label} strength={0.35}>
                 <motion.a
@@ -1237,7 +1237,7 @@ export default function Portfolio() {
           {/* Contact cards */}
           <div className="grid grid-cols-3 gap-3 mt-8">
             {[
-              { href: "mailto:anshverma1.work@gmail.com", icon: Mail, text: "Email", ariaLabel: "Email anshverma1.work@gmail.com", color: 'var(--accent-primary)' },
+              { href: "mailto:droptoansh@gmail.com", icon: Mail, text: "Email", ariaLabel: "Email droptoansh@gmail.com", color: 'var(--accent-primary)' },
               { href: "tel:+916398775442", icon: Phone, text: "+91 63987 75442", ariaLabel: "Call Ansh Verma", color: 'var(--accent-secondary)' },
               { href: null, icon: MapPin, text: "Agra, UP", ariaLabel: "Location: Agra, Uttar Pradesh", color: 'var(--accent-success)' },
             ].map(({ href, icon: Icon, text, ariaLabel, color }, i) => {
@@ -1285,7 +1285,7 @@ export default function Portfolio() {
               {[
                 { href: "https://github.com/Ansh-Verma", icon: Github, label: "GitHub" },
                 { href: "https://linkedin.com/in/anshverma", icon: Linkedin, label: "LinkedIn" },
-                { href: "mailto:anshverma1.work@gmail.com", icon: Mail, label: "Email" },
+                { href: "mailto:droptoansh@gmail.com", icon: Mail, label: "Email" },
               ].map(({ href, icon: Icon, label }, i) => (
                 <motion.a
                   key={i}
