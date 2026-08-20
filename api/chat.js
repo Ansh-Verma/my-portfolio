@@ -271,7 +271,7 @@ ${RESUME_SUMMARY}
       }));
 
     const payload = {
-      model: 'llama-3.3-70b-versatile',
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
       temperature: 0.45,
       max_tokens: 600,
       messages: [
